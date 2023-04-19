@@ -10,6 +10,7 @@ resources:
   cache: false
 commands:
   build:
-    - cmake /src
-    - make
-    - ./gten -a
+    - python3 --version
+    # - cmake /src
+    # - make
+    # - ./gten -a
