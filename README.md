@@ -3,8 +3,6 @@
 ## Project Title
 ### CUDA Stable Diffusion Algorithm
 
-> [ControlNet repository](https://github.com/lllyasviel/ControlNet)
-
 ## Project Summary
 
 Implement the stable diffusion algorithm in CUDA. 
@@ -30,3 +28,14 @@ expensive off-chip DRAM accesses.
 | Member1     |     Cheng-Han Chiang   |  chc11@illinois.edu    |
 | Member2     |     Shao-Chian Chen   |  scchen4@illinois.edu |
 | Member3     |     Po-Wei Wang    |  poweiww2@illinois.edu  |
+
+## 4/20 meeting status overview
+#### where we are in the process
+Trying to run [gradio_hough2image.py](https://github.com/lllyasviel/ControlNet/blob/main/gradio_hough2image.py) in [ControlNet](https://github.com/lllyasviel/ControlNet), but we don't have enough gpus to run it.
+#### problems we've solved
+
+#### issues we've encountered
+1. Which part we should implement. Probably some functions in resblock or attentionblock?
+2. Not sure how to get input/output.
+3. What is the expected result for the Presentation?
+#### plans for the coming week
