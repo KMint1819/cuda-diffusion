@@ -1,1 +1,30 @@
-# cuda-diffusion
+# ECE/CS 508 Spring 2023 Project Team 10
+
+## Project Title
+### CUDA Stable Diffusion Algorithm
+
+## Project Summary
+
+Implement the stable diffusion algorithm in CUDA. 
+The existing open-source implementations of the diffusion models [[1]](https://arxiv.org/abs/2112.10752 )[[2]](https://arxiv.org/abs/2302.05543)[[3]](https://github.com/CompVis/latent-diffusion)[[4]](https://github.com/lllyasviel/ControlNet) use high level APIs like 
+pytorch or tensorflow for implementing diffusion models. Their performance is orders of magnitude off 
+from the latency requirements of the real-time applications. Even on the modern desktop class GPUs, 
+these models take ~weeks to train and 10s of seconds to generate even relatively low resolution images 
+(512x512). [6] has shown that CUDA based implementations of the MLP networks can achieve 
+approximately 1OOM improvement in training and inference times compared to their high level 
+(tensorflow based) implementations. Moreover, the frame generation latency scales with the resolution 
+of the frame, which makes matter even worse for higher resolution images. Hence, it might make sense 
+to accelerate the stable diffusion algorithm using GPU programming languages. I propose to implement 
+the state of the art stable discussion algorithm [4] in GPU programming languages (cuda or vulkan) 
+where “hardware-aware” fusion of certain layers of diffusion models can be performed, which can 
+potentially exploit more and more on-chip data reuse for intermediate outputs and avoid more 
+expensive off-chip DRAM accesses. 
+
+## Team Information
+
+|   Info      |        Description     |        Email      |
+| ----------- | ---------------------- | ---------------- |
+| TeamID      |        Team-10        |
+| Member1     |     Cheng-Han Chiang   |  chc11@illinois.edu    |
+| Member2     |     Shao-Chian Chen   |  scchen4@illinois.edu |
+| Member3     |     Po-Wei Wang    |  poweiww2@illinois.edu  |
