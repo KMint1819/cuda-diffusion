@@ -20,6 +20,12 @@ where “hardware-aware” fusion of certain layers of diffusion models can be p
 potentially exploit more and more on-chip data reuse for intermediate outputs and avoid more 
 expensive off-chip DRAM accesses. 
 
+## How to run
+- This project can only be run using `rai`, a tool from UIUC to run on cloud servers.
+```
+rai -p .
+```
+
 ## Team Information
 
 |   Info      |        Description     |        Email      |

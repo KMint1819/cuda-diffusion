@@ -1,6 +1,6 @@
 rai:
   version: 0.2
-  image: raiproject/pumps2018:amd64-cuda100
+  image: kmint1819/gten
 resources:
   cpu:
     architecture: amd64
@@ -10,7 +10,7 @@ resources:
   cache: false
 commands:
   build:
-    - python3 --version
+    - python3.8 --version
     # - cmake /src
     # - make
     # - ./gten -a
