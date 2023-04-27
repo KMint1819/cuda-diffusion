@@ -26,6 +26,10 @@ expensive off-chip DRAM accesses.
 rai -p .
 ```
 
+## TODO:
+1. Find how to integrate pytorch & cuda-c
+2. 
+
 ## Team Information
 
 |   Info      |        Description     |        Email      |
