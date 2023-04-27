@@ -36,7 +36,6 @@ rai -p .
 1. Implement the operations in an AttentionBlock
     1. Conv1D
     1. QKV
-    1. Linear
 
 
 ## Team Information
