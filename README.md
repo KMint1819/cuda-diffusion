@@ -29,8 +29,15 @@ rai -p .
 ```
 
 ## TODO:
-1. Find how to integrate pytorch & cuda-c
-2. 
+1. ~Generate the fake data for running the kernel from the AttentionBlock~
+1. Integrate pytorch & cuda-c
+    1. ~Find necessary modules from the ControlNet code to make sure what we need to implement~
+    1. Find out how to connect the C++ code to pytorch
+1. Implement the operations in an AttentionBlock
+    1. Conv1D
+    1. QKV
+    1. Linear
+
 
 ## Team Information
 
