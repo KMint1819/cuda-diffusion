@@ -3,6 +3,8 @@
 ## Project Title
 ### CUDA Stable Diffusion Algorithm
 
+> [ControlNet repository](https://github.com/lllyasviel/ControlNet)
+
 ## Project Summary
 
 Implement the stable diffusion algorithm in CUDA. 
