@@ -42,13 +42,26 @@ class QKVAttentionLegacy(nn.Module):
         bs, width, length = qkv.shape
         assert width % (3 * self.n_heads) == 0
         ch = width // (3 * self.n_heads)
+
         q, k, v = qkv.reshape(bs * self.n_heads, ch * 3, length).split(ch, dim=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
-        weight = torch.einsum(
-            "bct,bcs->bts", q * scale, k * scale
-        )  # More stable with f16 than dividing afterwards
+
+        ein_weight = torch.einsum("bct,bcs->bts", q * scale, k * scale)
+
+        # My version
+        q *= scale
+        k *= scale
+        weight = torch.transpose(q, 1, 2)
+        weight = weight @ k
+        assert torch.allclose(weight, ein_weight), 'einsum implementation of weight is incorrect'
         weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
-        a = torch.einsum("bts,bcs->bct", weight, v)
+
+        ein_a = torch.einsum("bts,bcs->bct", weight, v)
+        v = torch.transpose(v, 1, 2)
+        a = weight @ v
+        a = torch.transpose(a, 1, 2)
+        assert torch.allclose(a, ein_a), 'einsum implementation of a is incorrect'
+
         return a.reshape(bs, -1, length)
 
 class AttentionBlock(nn.Module):
