@@ -10,7 +10,9 @@ resources:
   cache: false
 commands:
   build:
-    - python3.8 --version
+    - ls
+    - pwd
+    - python3.8 /src/python/play.py
     # - cmake /src
     # - make
     # - ./gten -a
