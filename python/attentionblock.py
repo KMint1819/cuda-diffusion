@@ -1,6 +1,7 @@
 import math
 import torch
 from torch import nn
+import torch.utils.checkpoint
 
 
 class GroupNorm32(nn.GroupNorm):
