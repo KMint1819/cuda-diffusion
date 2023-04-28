@@ -94,7 +94,6 @@ class AttentionBlock(nn.Module):
         self.proj_out = zero_module(nn.Conv1d(channels, channels, 1))
 
     def forward(self, x):
-        # return checkpoint(self._forward, (x,), self.parameters(), True)   # TODO: check checkpoint usage, is True # TODO: fix the .half call!!!
         return torch.utils.checkpoint.checkpoint(self._forward, x)  # pytorch
         #return pt_checkpoint(self._forward, x)  # pytorch
 

@@ -24,8 +24,8 @@ std::vector<at::Tensor> lltm_forward(torch::Tensor input, torch::Tensor weights,
     return {new_h, new_cell, input_gate, output_gate, candidate_cell, X, gate_weights};
 }
 
-std::vector<torch::Tensor> attention_forward(torch::Tensor input, torch::Tensor weights, torch::Tensor bias,
-                                             int n_channels, int n_heads, int n_head_channels)
+torch::Tensor attention_forward(torch::Tensor input, torch::Tensor weights, torch::Tensor bias, int n_channels,
+                                int n_heads, int n_head_channels)
 {
     return {};
 }
@@ -34,6 +34,10 @@ std::vector<torch::Tensor> attention_forward(torch::Tensor input, torch::Tensor 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
     m.def("forward", &torda::lltm_forward, "LLTM forward");
-    m.def("add", &torda::add, "My Add!");
     m.def("preprocess", &torda::preprocess, "Preprocess the data");
+    m.def("normalize", &torda::normalize, "Normalize the data");
+    m.def("qkv", &torda::qkv, "Run qkv forward pass");
+    m.def("attention", &torda::attention, "Run attention forward pass");
+    m.def("proj_out", &torda::proj_out, "Run proj_out(feed forward) forward pass");
+    m.def("postprocess", &torda::postprocess, "Postprocess the data");
 }
