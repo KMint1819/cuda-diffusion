@@ -8,13 +8,9 @@ namespace torda
 {
 
 using torch::Tensor;
-Tensor preprocess(Tensor x)
+Tensor preprocess(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels)
 {
-    return torch::zeros({4, 6});
-}
-
-Tensor normalize(Tensor x, int n_channels)
-{
+    // do reshape and normalization
     return torch::zeros({4, 6});
 }
 
@@ -23,7 +19,7 @@ Tensor qkv(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_chann
     return torch::zeros({4, 6});
 }
 
-Tensor attention(Tensor x, Tensor weights, Tensor bias, int n_heads)
+Tensor attention(Tensor x, int n_heads)
 {
     return torch::zeros({4, 6});
 }
