@@ -1,1 +1,6 @@
 __pycache__
+.vscode
+*.pth
+build/
+dist/
+*.egg-info/
