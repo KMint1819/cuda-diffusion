@@ -1,12 +1,10 @@
+#include "modules.hpp"
 #include <iostream>
 #include <torch/extension.h>
 #include <vector>
 
-torch::Tensor d_sigmoid(torch::Tensor z)
+namespace torda
 {
-    auto s = torch::sigmoid(z);
-    return (1 - s) * s;
-}
 
 std::vector<at::Tensor> lltm_forward(torch::Tensor input, torch::Tensor weights, torch::Tensor bias,
                                      torch::Tensor old_h, torch::Tensor old_cell)
@@ -26,13 +24,16 @@ std::vector<at::Tensor> lltm_forward(torch::Tensor input, torch::Tensor weights,
     return {new_h, new_cell, input_gate, output_gate, candidate_cell, X, gate_weights};
 }
 
-int my_add()
+std::vector<torch::Tensor> attention_forward(torch::Tensor input, torch::Tensor weights, torch::Tensor bias,
+                                             int n_channels, int n_heads, int n_head_channels)
 {
-    return 10 + 20;
+    return {};
 }
+} // namespace torda
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
-    m.def("forward", &lltm_forward, "LLTM forward");
-    m.def("add", &my_add, "My Add!");
+    m.def("forward", &torda::lltm_forward, "LLTM forward");
+    m.def("add", &torda::add, "My Add!");
+    m.def("preprocess", &torda::preprocess, "Preprocess the data");
 }
