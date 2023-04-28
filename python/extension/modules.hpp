@@ -6,7 +6,6 @@
 
 namespace torda
 {
-
 using torch::Tensor;
 Tensor preprocess(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels)
 {

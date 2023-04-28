@@ -39,10 +39,18 @@ class AttentionBlock(nn.Module):
             ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
             self.num_heads = channels // num_head_channels
         
-        self.qkv_dict = nn.ParameterDict({
+        self.norm = nn.ParameterDict({
             'weights': nn.Parameter(torch.empty(channels, channels * 3, 1)),
             'bias': nn.Parameter(torch.empty(channels * 3)),
         })
+        self.qkv = nn.ParameterDict({
+            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1)),
+            'bias': nn.Parameter(torch.empty(channels * 3)),
+        })
+        self.proj_out = nn.ParameterDict({
+            'weights': nn.Parameter(torch.empty(channels, channels, 1)),
+            'bias': nn.Parameter(torch.empty(channels)),
+        })
 
     def forward(self, x):
-        return AttentionBlockFunctional.apply(x, self.qkv_dict, self.attention_dict, self.proj_out_dict, self.channels, self.num_heads)
+        return AttentionBlockFunctional.apply(x, self.norm, self.qkv, self.proj_out, self.proj_out_dict, self.channels, self.num_heads)
