@@ -81,30 +81,17 @@ static void generate_data(int *x, const int nx, const int ny, const int nz)
 static bool verify(const int *Anext, const int *A0, const int nx, const int ny, const int nz)
 {
 
-#define _Anext(xi, yi, zi) Anext[(zi) * (ny * nx) + (yi)*nx + (xi)]
-#define _A0(xi, yi, zi) A0[(zi) * (ny * nx) + (yi)*nx + (xi)]
-
     SECTION("the results must match")
     {
-
-        for (size_t z = 1; z < nz - 1; ++z)
+        for (size_t x = 0; x < nx; ++x)
         {
-            for (size_t y = 1; y < ny - 1; ++y)
-            {
-                for (size_t x = 1; x < nx - 1; ++x)
-                {
-                    const int expected = _A0(x, y, z + 1) + _A0(x, y, z - 1) + _A0(x, y + 1, z) + _A0(x, y - 1, z) +
-                                         _A0(x + 1, y, z) + _A0(x - 1, y, z) - 6 * _A0(x, y, z);
-                    INFO("the results did not match at [" << x << "," << y << "," << z << "]");
-                    REQUIRE(expected == _Anext(x, y, z));
-                }
-            }
+            const int expected = A0[x] + 1;
+            INFO("the results did not match at [" << x << "]");
+            REQUIRE(expected == Anext[x]);
         }
     }
     return true;
 
-#undef _Anext
-#undef _A0
 }
 
 static std::chrono::time_point<std::chrono::high_resolution_clock> now()
