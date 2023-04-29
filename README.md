@@ -30,13 +30,16 @@ rai -p .
 
 ## TODO:
 1. ~Generate the fake data for running the kernel from the AttentionBlock~
+1. Build unittest for verifying the correctness of the kernel 
 1. Integrate pytorch & cuda-c
     1. ~Find necessary modules from the ControlNet code to make sure what we need to implement~
     1. ~Find out how to connect the C++ code to pytorch~
 1. Implement the operations in an AttentionBlock
     1. Conv1D
     1. QKV
-
+1. Profiling 
+    1. Original AttentionBlock 
+    1. Our implementation
 
 ## Team Information
 
