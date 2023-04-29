@@ -16,8 +16,7 @@ oldBlock = OldAttentionBlock(
 newBlock = NewAttentionBlock(
     channels = n_channels,
     num_heads = n_heads,
-    num_head_channels = n_head_channels
-)
+    num_head_channels = n_head_channels)
 
 for k, v in oldBlock.state_dict().items():
     print(k, v.shape)

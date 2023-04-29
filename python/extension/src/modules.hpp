@@ -10,7 +10,17 @@ using torch::Tensor;
 Tensor preprocess(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels)
 {
     // do reshape and normalization
-    return torch::zeros({4, 6});
+    auto shape = x.sizes();
+    int b = shape[0];
+    int c = shape[1];
+    x.reshape({b, c, -1});
+
+    // Parallelize normalization
+    torch::nn::GroupNormImpl norm(32, n_channels);
+    norm.weight = norm_weight;
+    norm.bias = norm_bias;
+
+    return norm.forward(x);
 }
 
 Tensor qkv(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_channels, int kernel_size)

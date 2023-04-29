@@ -1,19 +1,31 @@
 import torch
 import torda
+torch.set_printoptions(sci_mode=False)
 
-x = torch.randn(2, 32, 32)
+n_channels = 64
+n_heads = 8
+n_head_channels = 32
 
-x = torda.preprocess(x, torch.zeros((1, 2, 3)), torch.zeros((1, 2, 3)), 900)
+x = torch.arange(0, n_channels * 32).reshape(1, n_channels, 32).float()
+norm_weight= torch.ones(64) * 0.1
+norm_bias = torch.ones(64) * 0.3
+
+# print('x: ', x[:10])
+# print('norm_weight: ', norm_weight[:10])
+# print('norm_bias: ', norm_bias[:10])
+
+x = torda.preprocess(x, norm_weight, norm_bias, n_channels)
+print(f'After preprocess: {x.shape}')
 print(f'After preprocess: {x}')
 
-x = torda.qkv(x, torch.zeros((1, 2, 3)), torch.zeros((4, 5, 6)), 10, 20, 30)
-print(f'After qkv: {x}')
+# x = torda.qkv(x, torch.zeros((1, 2, 3)), torch.zeros((4, 5, 6)), 10, 20, 30)
+# print(f'After qkv: {x}')
 
-x = torda.attention(x, 40)
-print(f'After attention: {x}')
+# x = torda.attention(x, 40)
+# print(f'After attention: {x}')
 
-x = torda.proj_out(x,  torch.zeros((1, 2, 3)), torch.zeros((4, 5, 6)), 50, 60, 70)
-print(f'After proj_out: {x}')
+# x = torda.proj_out(x,  torch.zeros((1, 2, 3)), torch.zeros((4, 5, 6)), 50, 60, 70)
+# print(f'After proj_out: {x}')
 
-x = torda.postprocess(x, [100, 102, 104])
-print(f'After postprocess: {x}')
+# x = torda.postprocess(x, [100, 102, 104])
+# print(f'After postprocess: {x}')

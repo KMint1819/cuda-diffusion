@@ -7,6 +7,7 @@ class AttentionBlockFunctional(torch.autograd.Function):
     def forward(x, norm_dict, qkv_dict, proj_out_dict, n_channels, n_heads):
         b, c, *spatial = x.shape
         x = torda.preprocess(x, norm_dict['weight'], norm_dict['bias'], n_channels)
+        return x
 
         # Try to aggregrate these three in the cuda code like the following: 
         # return ans = torda.compute()
