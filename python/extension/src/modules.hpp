@@ -25,7 +25,11 @@ Tensor preprocess(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels
 
 Tensor qkv(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_channels, int kernel_size)
 {
-    return torch::zeros({4, 6});
+    torch::nn::Conv1dImpl conv(in_channels, out_channels, kernel_size);
+    conv.weight = weights;
+    conv.bias = bias;
+
+    return conv.forward(x);
 }
 
 Tensor attention(Tensor x, int n_heads)
