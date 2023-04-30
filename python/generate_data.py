@@ -30,18 +30,17 @@ for k, v in block.state_dict().items():
 
 # My fake input
 input_len = 32
-input_data = torch.arange(0, 1 * n_channels * input_len) \
-    .reshape(1, n_channels, input_len).float()
-np.savetxt('input.txt', input_data.numpy().reshape(-1), fmt='%.6f')
+input_data = torch.randn(1, n_channels, input_len)
+np.savetxt('input.txt', input_data.numpy().reshape(-1).astype(np.float32), fmt='%.6f')
 
 # Initialize the weights 
 state_dict = {
-    'norm.weight': torch.ones(64) * 0.1,
-    'norm.bias': torch.ones(64) * 0.3,
-    'qkv.weight': torch.ones((192, 64, 1)) * 0.5,
-    'qkv.bias': torch.ones(192) * 0.7,
-    'proj_out.weight': torch.ones((64, 64, 1)) * 0.2,
-    'proj_out.bias': torch.ones(64) * 0.4,
+    'norm.weight': torch.randn(64),
+    'norm.bias': torch.randn(64),
+    'qkv.weight': torch.randn((192, 64, 1)),
+    'qkv.bias': torch.randn(192),
+    'proj_out.weight': torch.randn((64, 64, 1)),
+    'proj_out.bias': torch.randn(64),
 }
 
 # My fake weights
