@@ -8,14 +8,18 @@
 namespace torda
 {
 using torch::Tensor;
-Tensor preprocess(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels)
+Tensor preprocess(Tensor x)
 {
     // do reshape and normalization
     auto shape = x.sizes();
     int b = shape[0];
     int c = shape[1];
     x.reshape({b, c, -1});
+    return x;
+}
 
+Tensor normalize(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels)
+{
     // Parallelize normalization
     torch::nn::GroupNormImpl norm(32, n_channels);
     norm.weight = norm_weight;
@@ -71,9 +75,10 @@ Tensor proj_out(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_
     return conv.forward(x);
 }
 
-Tensor postprocess(Tensor x, const std::vector<int> &spatial)
+Tensor postprocess(Tensor x, Tensor h, torch::IntArrayRef shape)
 {
-    return torch::zeros({4, 6});
+    x = x + h;
+    return x.reshape(shape);
 }
 
 } // namespace torda

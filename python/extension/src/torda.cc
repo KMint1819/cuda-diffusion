@@ -16,6 +16,7 @@ Tensor compute(Tensor input, Tensor norm_weight, Tensor norm_bias, Tensor qkv_we
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
     m.def("preprocess", &torda::preprocess, "Preprocess the data");
+    m.def("normalize", &torda::normalize, "Normalize the data");
     m.def("qkv", &torda::qkv, "Run qkv forward pass");
     m.def("attention", &torda::attention, "Run attention forward pass");
     m.def("proj_out", &torda::proj_out, "Run proj_out(feed forward) forward pass");

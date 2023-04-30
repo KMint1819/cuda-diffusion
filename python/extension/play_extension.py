@@ -28,18 +28,25 @@ qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
 proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
 proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
 
-x = torda.preprocess(x, norm_weight, norm_bias, n_channels)
+b, c, *spatial = x.shape
+x = torda.preprocess(x)
 print(f'After preprocess: {x.shape}')
 print(f'After preprocess: {x}')
 
-x = torda.qkv(x, qkv_weight, qkv_bias, n_channels, n_channels * 3, 1)
+norm = torda.normalize(x, norm_weight, norm_bias, n_channels)
+print(f'After normalize: {norm}')
+
+qkv = torda.qkv(norm, qkv_weight, qkv_bias, n_channels, n_channels * 3, 1)
 print(f'After qkv: {x}')
 
-x = torda.attention(x, n_heads)
+h = torda.attention(qkv, n_heads)
 print(f'After attention: {x.shape}\n{x}')
 
-x = torda.proj_out(x, proj_out_weight, proj_out_bias, n_channels, n_channels, 1)
+h = torda.proj_out(h, proj_out_weight, proj_out_bias, n_channels, n_channels, 1)
 print(f'After proj_out: {x.shape}\n{x}')
 
-# x = torda.postprocess(x, [100, 102, 104])
-# print(f'After postprocess: {x}')
+print(f'x: {x.shape}\n{x}')
+print(f'h: {h.shape}\n{h}')
+print(f'shape: {(b, c, *spatial)}')
+x = torda.postprocess(x, h, (b, c, *spatial))
+print(f'After postprocess: {x.shape}\n{x}')
