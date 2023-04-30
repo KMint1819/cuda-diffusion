@@ -1,22 +1,32 @@
 import torch
 import torda
+import numpy as np
+from pathlib import Path
 torch.set_printoptions(sci_mode=False)
+
+def load_data(p, shape):
+    raw = np.loadtxt(p, dtype=np.float32)
+    tensor = torch.from_numpy(raw).reshape(shape)
+    return tensor
 
 n_channels = 64
 n_heads = 8
 n_head_channels = 32
 
-x = torch.arange(0, n_channels * 32).reshape(1, n_channels, 32).float()
-norm_weight= torch.ones(64) * 0.1
-norm_bias = torch.ones(64) * 0.3
-qkv_weight = torch.ones((192, 64, 1)) * 0.5
-qkv_bias = torch.ones(192) * 0.7
-proj_out_weight = torch.ones((64, 64, 1)) * 0.2
-proj_out_bias = torch.ones(64) * 0.4
+if n_head_channels != -1:
+    assert (
+        n_channels % n_head_channels == 0
+    ), f"q,k,v channels {n_channels} is not divisible by num_head_channels {num_head_channels}"
+    n_heads = n_channels // n_head_channels
 
-# print('x: ', x[:10])
-# print('norm_weight: ', norm_weight[:10])
-# print('norm_bias: ', norm_bias[:10])
+data_dir = Path('../../data')
+x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
+norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
+norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))
+qkv_weight = load_data(data_dir / 'qkv-weight.txt', (n_channels * 3, n_channels, 1))
+qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
+proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
+proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
 
 x = torda.preprocess(x, norm_weight, norm_bias, n_channels)
 print(f'After preprocess: {x.shape}')
@@ -25,8 +35,8 @@ print(f'After preprocess: {x}')
 x = torda.qkv(x, qkv_weight, qkv_bias, n_channels, n_channels * 3, 1)
 print(f'After qkv: {x}')
 
-# x = torda.attention(x, 40)
-# print(f'After attention: {x}')
+x = torda.attention(x, n_heads)
+print(f'After attention: {x.shape}\n{x}')
 
 # x = torda.proj_out(x,  torch.zeros((1, 2, 3)), torch.zeros((4, 5, 6)), 50, 60, 70)
 # print(f'After proj_out: {x}')

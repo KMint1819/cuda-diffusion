@@ -42,8 +42,9 @@ class QKVAttentionLegacy(nn.Module):
         bs, width, length = qkv.shape
         assert width % (3 * self.n_heads) == 0
         ch = width // (3 * self.n_heads)
+        qkv = qkv.reshape(bs * self.n_heads, ch * 3, length)
+        q, k, v = qkv.split(ch, dim=1)
 
-        q, k, v = qkv.reshape(bs * self.n_heads, ch * 3, length).split(ch, dim=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
         q *= scale
         k *= scale
@@ -98,7 +99,8 @@ class AttentionBlock(nn.Module):
         x = x.reshape(b, c, -1)
         x = self.norm(x)
         qkv = self.qkv(x)
-        return qkv
+        print(qkv)
         h = self.attention(qkv)
+        return h
         h = self.proj_out(h)
         return (x + h).reshape(b, c, *spatial)

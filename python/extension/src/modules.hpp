@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <iostream>
 #include <torch/extension.h>
 #include <vector>
@@ -32,9 +33,33 @@ Tensor qkv(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_chann
     return conv.forward(x);
 }
 
-Tensor attention(Tensor x, int n_heads)
+Tensor attention(Tensor qkv, int n_heads)
 {
-    return torch::zeros({4, 6});
+    auto shape = qkv.sizes();
+    int bs = shape[0];
+    int width = shape[1];
+    int length = shape[2];
+    assert(width % (3 * n_heads) == 0);
+    int ch = width / (3 * n_heads);
+
+    qkv = qkv.reshape({bs * n_heads, 3 * ch, length});
+    Tensor q = qkv.slice(1, 0, ch);
+    Tensor k = qkv.slice(1, ch, 2 * ch);
+    Tensor v = qkv.slice(1, 2 * ch, 3 * ch);
+
+    float scale = 1. / sqrt(sqrt(ch));
+    q *= scale;
+    k *= scale;
+
+    q = torch::transpose(q, 1, 2);
+    q = torch::matmul(q, k);
+    q = torch::softmax(q, -1);
+
+    v = torch::transpose(v, 1, 2);
+    Tensor a = torch::matmul(q, v);
+    a = torch::transpose(a, 1, 2);
+
+    return a.reshape({bs, -1, length});
 }
 
 Tensor proj_out(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_channels, int kernel_size)
