@@ -1,42 +1,40 @@
-from attentionblock_o import AttentionBlock as OldAttentionBlock
-from attentionblock import AttentionBlock as NewAttentionBlock
+from attentionblock import AttentionBlock
 import torch
+from torch import nn
 import numpy as np
+from pathlib import Path
+torch.set_printoptions(sci_mode=False)
+
+def load_data(p, shape):
+    raw = np.loadtxt(p, dtype=np.float32)
+    tensor = torch.from_numpy(raw).reshape(shape)
+    return tensor
 
 n_channels = 64 # Must be a multiple of n_head_channels
 n_heads = 8
 n_head_channels = 32 # Must be a multiple of 32
 
-oldBlock = OldAttentionBlock(
-    channels = n_channels,
-    num_heads = n_heads,
-    num_head_channels = n_head_channels,
-    use_checkpoint=True)
+data_dir = Path('../data')
+x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
+norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
+norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))
+qkv_weight = load_data(data_dir / 'qkv-weight.txt', (n_channels * 3, n_channels, 1))
+qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
+proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
+proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
 
-newBlock = NewAttentionBlock(
+block = AttentionBlock(
     channels = n_channels,
     num_heads = n_heads,
     num_head_channels = n_head_channels)
 
-for k, v in oldBlock.state_dict().items():
-    print(k, v.shape)
-
-# My fake input
-input_len = 32
-input_data = np.loadtxt('data/input.txt', dtype=np.float32)
-input_data = torch.from_numpy(input_data).reshape(1, n_channels, input_len).float()
-
-state_dict = {}
-for k, v in oldBlock.state_dict().items():
-    name = k.replace('.', '-')
-    state_dict[k] = torch.from_numpy(np.loadtxt(f'data/{name}.txt', dtype=np.float32)).reshape(v.shape)
-
-oldBlock.load_state_dict(state_dict)
-newBlock.load_state_dict(state_dict)
+block.norm.weight = nn.Parameter(norm_weight)
+block.norm.bias = nn.Parameter(norm_bias)
+block.qkv.weight = nn.Parameter(qkv_weight)
+block.qkv.bias = nn.Parameter(qkv_bias)
+block.proj_out.weight = nn.Parameter(proj_out_weight)
+block.proj_out.bias = nn.Parameter(proj_out_bias)
 
 with torch.no_grad():
-    old_out = oldBlock(input_data)
-    new_out = newBlock(input_data)
-
-    # Compare two outputs
-    print(torch.allclose(old_out, new_out, atol=1e-6))
+    out = block(x)
+    print(f'After attention: {out.shape}\n{out}')

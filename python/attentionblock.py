@@ -100,7 +100,4 @@ class AttentionBlock(nn.Module):
         qkv = self.qkv(self.norm(x))
         h = self.attention(qkv)
         h = self.proj_out(h)
-        print(f'x: {x.shape}\n{x}')
-        print(f'h: {h.shape}\n{h}')
-        print(f'shape: {(b, c, *spatial)}')
         return (x + h).reshape(b, c, *spatial)
