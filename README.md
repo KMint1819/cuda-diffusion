@@ -37,12 +37,16 @@ rai -p .
 1. ~Implement the operations in an AttentionBlock~
     1. ~Conv1D~
     1. ~QKV~
+    1. Aggregation
 1. Implement the cuda operations in an AttentionBlock
     1. Conv1D
     1. QKV
 1. Profiling 
     1. Original AttentionBlock 
     1. Our implementation
+1. Potential code optimizations
+    1. pointer/ref
+    1. `torch.zero_grad()`
 
 ## Team Information
 
