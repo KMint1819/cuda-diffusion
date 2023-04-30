@@ -64,7 +64,11 @@ Tensor attention(Tensor qkv, int n_heads)
 
 Tensor proj_out(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_channels, int kernel_size)
 {
-    return torch::zeros({4, 6});
+    torch::nn::Conv1dImpl conv(in_channels, out_channels, kernel_size);
+    conv.weight = weights;
+    conv.bias = bias;
+
+    return conv.forward(x);
 }
 
 Tensor postprocess(Tensor x, const std::vector<int> &spatial)

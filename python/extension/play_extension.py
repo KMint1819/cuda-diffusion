@@ -38,8 +38,8 @@ print(f'After qkv: {x}')
 x = torda.attention(x, n_heads)
 print(f'After attention: {x.shape}\n{x}')
 
-# x = torda.proj_out(x,  torch.zeros((1, 2, 3)), torch.zeros((4, 5, 6)), 50, 60, 70)
-# print(f'After proj_out: {x}')
+x = torda.proj_out(x, proj_out_weight, proj_out_bias, n_channels, n_channels, 1)
+print(f'After proj_out: {x.shape}\n{x}')
 
 # x = torda.postprocess(x, [100, 102, 104])
 # print(f'After postprocess: {x}')

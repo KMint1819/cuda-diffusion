@@ -101,6 +101,6 @@ class AttentionBlock(nn.Module):
         qkv = self.qkv(x)
         print(qkv)
         h = self.attention(qkv)
-        return h
         h = self.proj_out(h)
+        return h
         return (x + h).reshape(b, c, *spatial)
