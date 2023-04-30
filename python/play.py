@@ -16,24 +16,23 @@ n_head_channels = 32 # Must be a multiple of 32
 
 data_dir = Path(__file__).parent.parent / 'data'
 x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
-norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
-norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))
-qkv_weight = load_data(data_dir / 'qkv-weight.txt', (n_channels * 3, n_channels, 1))
-qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
-proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
-proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
+x = x.cuda()
+
+state_dict ={
+    'norm.weight': load_data(data_dir / 'norm-weight.txt', (n_channels,)),
+    'norm.bias': load_data(data_dir / 'norm-bias.txt', (n_channels,)),
+    'qkv.weight': load_data(data_dir / 'qkv-weight.txt', (n_channels * 3, n_channels, 1)),
+    'qkv.bias': load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,)),
+    'proj_out.weight': load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1)),
+    'proj_out.bias': load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
+}
 
 block = AttentionBlock(
     channels = n_channels,
     num_heads = n_heads,
     num_head_channels = n_head_channels)
-
-block.norm.weight = nn.Parameter(norm_weight, requires_grad=False)
-block.norm.bias = nn.Parameter(norm_bias, requires_grad=False)
-block.qkv.weight = nn.Parameter(qkv_weight, requires_grad=False)
-block.qkv.bias = nn.Parameter(qkv_bias, requires_grad=False)
-block.proj_out.weight = nn.Parameter(proj_out_weight, requires_grad=False)
-block.proj_out.bias = nn.Parameter(proj_out_bias, requires_grad=False)
+block.load_state_dict(state_dict)
+block = block.cuda()
 
 with torch.no_grad():
     out = block(x)

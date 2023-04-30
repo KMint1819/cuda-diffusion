@@ -91,7 +91,8 @@ class AttentionBlock(nn.Module):
         self.proj_out = zero_module(nn.Conv1d(channels, channels, 1))
 
     def forward(self, x):
-        return torch.utils.checkpoint.checkpoint(self._forward, x)  # pytorch
+        return self._forward(x)
+        # return torch.utils.checkpoint.checkpoint(self._forward, x)  # pytorch
         #return pt_checkpoint(self._forward, x)  # pytorch
 
     def _forward(self, x):
