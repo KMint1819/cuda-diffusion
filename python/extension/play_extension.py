@@ -16,10 +16,10 @@ n_head_channels = 32
 if n_head_channels != -1:
     assert (
         n_channels % n_head_channels == 0
-    ), f"q,k,v channels {n_channels} is not divisible by num_head_channels {num_head_channels}"
+    ), f"q,k,v channels {n_channels} is not divisible by num_head_channels {n_head_channels}"
     n_heads = n_channels // n_head_channels
 
-data_dir = Path('../../data')
+data_dir = Path(__file__).parent.parent.parent / 'data'
 x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
 norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
 norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))

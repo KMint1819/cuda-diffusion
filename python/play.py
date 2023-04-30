@@ -14,7 +14,7 @@ n_channels = 64 # Must be a multiple of n_head_channels
 n_heads = 8
 n_head_channels = 32 # Must be a multiple of 32
 
-data_dir = Path('../data')
+data_dir = Path(__file__).parent.parent / 'data'
 x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
 norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
 norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))
@@ -28,12 +28,12 @@ block = AttentionBlock(
     num_heads = n_heads,
     num_head_channels = n_head_channels)
 
-block.norm.weight = nn.Parameter(norm_weight)
-block.norm.bias = nn.Parameter(norm_bias)
-block.qkv.weight = nn.Parameter(qkv_weight)
-block.qkv.bias = nn.Parameter(qkv_bias)
-block.proj_out.weight = nn.Parameter(proj_out_weight)
-block.proj_out.bias = nn.Parameter(proj_out_bias)
+block.norm.weight = nn.Parameter(norm_weight, requires_grad=False)
+block.norm.bias = nn.Parameter(norm_bias, requires_grad=False)
+block.qkv.weight = nn.Parameter(qkv_weight, requires_grad=False)
+block.qkv.bias = nn.Parameter(qkv_bias, requires_grad=False)
+block.proj_out.weight = nn.Parameter(proj_out_weight, requires_grad=False)
+block.proj_out.bias = nn.Parameter(proj_out_bias, requires_grad=False)
 
 with torch.no_grad():
     out = block(x)

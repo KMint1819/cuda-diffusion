@@ -17,7 +17,7 @@ n_channels = 64 # Must be a multiple of n_head_channels
 n_heads = 8
 n_head_channels = 32 # Must be a multiple of 32
 
-data_dir = Path('../data')
+data_dir = Path(__file__).parent.parent / 'data'
 x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
 norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
 norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))
