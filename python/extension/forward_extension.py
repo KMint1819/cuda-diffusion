@@ -28,6 +28,7 @@ qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
 proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
 proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
 
+x = x.cuda()
 b, c, *spatial = x.shape
 x = torda.preprocess(x)
 print(f'After preprocess: {x.shape}')

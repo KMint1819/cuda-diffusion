@@ -6,6 +6,11 @@
 namespace torda
 {
 
+std::string hello(const std::string &name)
+{
+    return "Saying hello to " + name + " from C++!";
+}
+
 Tensor compute(Tensor input, Tensor norm_weight, Tensor norm_bias, Tensor qkv_weight, Tensor qkv_bias,
                Tensor proj_out_weight, Tensor proj_out_bias, int n_channels, int n_heads)
 {
@@ -15,6 +20,7 @@ Tensor compute(Tensor input, Tensor norm_weight, Tensor norm_bias, Tensor qkv_we
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
+    m.def("hello", &torda::hello, "Say hello from C++!");
     m.def("preprocess", &torda::preprocess, "Preprocess the data");
     m.def("normalize", &torda::normalize, "Normalize the data");
     m.def("qkv", &torda::qkv, "Run qkv forward pass");
