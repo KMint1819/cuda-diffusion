@@ -41,16 +41,16 @@ class AttentionBlock(nn.Module):
             self.num_heads = channels // num_head_channels
         
         self.norm = nn.ParameterDict({
-            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1)),
-            'bias': nn.Parameter(torch.empty(channels * 3)),
+            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1), requires_grad=False),
+            'bias': nn.Parameter(torch.empty(channels * 3), requires_grad=False)),
         })
         self.qkv = nn.ParameterDict({
-            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1)),
-            'bias': nn.Parameter(torch.empty(channels * 3)),
+            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1), requires_grad=False),
+            'bias': nn.Parameter(torch.empty(channels * 3), requires_grad=False)),
         })
         self.proj_out = nn.ParameterDict({
-            'weights': nn.Parameter(torch.empty(channels, channels, 1)),
-            'bias': nn.Parameter(torch.empty(channels)),
+            'weights': nn.Parameter(torch.empty(channels, channels, 1), requires_grad=False)),
+            'bias': nn.Parameter(torch.empty(channels), requires_grad=False)),
         })
 
     def forward(self, x):

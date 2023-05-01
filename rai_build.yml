@@ -12,9 +12,6 @@ commands:
   build:
     - ls
     - pwd
-    - nsys profile --trace=cuda,cudnn,cublas,osrt,nvtx --delay=60 python3.8 /src/python/play.py
-    # - nvprof --print-gpu-trace -o profile python3.8 /src/python/play.py
+    - nsys profile --trace=cuda,cudnn,cublas,osrt,nvtx python3.8 /src/python/forward_old_attention.py
     # - cmake /src
-    # - make
-    # - nvprof --cpu-profiling on --export-profile timeline.nvprof -- ./gten ko-i /src/python/play.py -o output
     # - ./gten -a
