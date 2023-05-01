@@ -9,7 +9,7 @@ __global__ void testKernel(float* originalVal, float* newVal, int valSize) {
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= 0 && i < valSize)
-    newVal[i] = 166.606949; //originalVal[i] + 1;
+    newVal[i] = 91.035789; //originalVal[i] + 1;
 }
 
 void launchTest(float* originalVal, float* newVal, int valSize) {

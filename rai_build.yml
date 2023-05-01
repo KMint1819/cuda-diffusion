@@ -10,8 +10,11 @@ resources:
   cache: false
 commands:
   build:
-    - ls
-    - pwd
-    - nsys profile --trace=cuda,cudnn,cublas,osrt,nvtx python3.8 /src/python/forward_old_attention.py
-    # - cmake /src
+    # - ls
+    # - pwd
+    # - python3.8 /src/python/play.py
+    - cmake /src
+    - make
+    # - nsys profile --stats=true -o analysis_file ./gten
+    - nv-nsight-cu-cli --section '.*' -o analysis_file python3.8 /src/python/forward_old_attention.py
     # - ./gten -a
