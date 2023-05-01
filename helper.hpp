@@ -18,6 +18,7 @@
 #include <chrono>
 #include <random>
 #include <string>
+// #include <cstdlib>
 
 #include <cuda.h>
 
@@ -78,18 +79,49 @@ static void generate_data(int *x, const int nx, const int ny, const int nz)
     delete rng_state;
 }
 
-static bool verify(const int *Anext, const int *A0, const int nx, const int ny, const int nz)
+static void read_input_data(float *x, const int nx)
 {
+    // if (__cplusplus == 201103L) puts("C++11");
+    // char buffer[100];
+    // if (getcwd(buffer, sizeof(buffer)) != NULL) {
+    //     printf("Current working directory : %s\n", buffer);
+    // }
+    // const char* final_command = "ls /../src/data";
+    // system(final_command);
+    
+    FILE* pFile;
+    char input_str [32];
+    pFile = fopen ("/../src/data/input.txt", "r");
+    if (pFile == NULL) perror ("Error opening /../src/data/input.txt");
+    else {
+        size_t ii = 0;
+        while (ii < nx && fgets (input_str , 32 , pFile) != NULL){
+            x[ii++] = atof (input_str);
+            // puts (input_str);
+        }
+        fclose (pFile);
+        if(ii < nx) perror ("Don't have enough input from /../src/data/input.txt");
+    }
+}
+
+static bool verify(const float *Anext, const int nx, const int ny, const int nz)
+{
+    FILE* pFile;
+    char out_str [32];
+    pFile = fopen ("/../src/data/out.txt", "r");
+    if (pFile == NULL) perror ("Error opening /../src/data/out.txt");
 
     SECTION("the results must match")
     {
-        for (size_t x = 0; x < nx; ++x)
-        {
-            const int expected = A0[x] + 1;
-            INFO("the results did not match at [" << x << "]");
-            REQUIRE(expected == Anext[x]);
+        size_t ii = 0;
+        while (ii < nx && fgets (out_str , 32 , pFile) != NULL){
+            const float expected = atof (out_str);
+            INFO("the results did not match at [" << ii << "]");
+            REQUIRE(expected == Anext[ii++]);
         }
+        if(ii < nx) perror ("Don't have enough input from /../src/data/out.txt");
     }
+    fclose (pFile);
     return true;
 
 }
