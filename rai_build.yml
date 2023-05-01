@@ -1,6 +1,6 @@
 rai:
   version: 0.2
-  image: kmint1819/gten
+  image: kmint1819/gten:local
 resources:
   cpu:
     architecture: amd64
