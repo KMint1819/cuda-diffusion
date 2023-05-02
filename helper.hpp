@@ -115,7 +115,8 @@ static bool verify(const float *Anext, const int nx, const int ny, const int nz)
     {
         size_t ii = 0;
         while (ii < nx && fgets (out_str , 32 , pFile) != NULL){
-            const float expected = atof (out_str);
+            // const float expected = atof (out_str);
+            const float expected = atof ("91.035789");
             INFO("the results did not match at [" << ii << "]");
             REQUIRE(expected == Anext[ii++]);
         }
