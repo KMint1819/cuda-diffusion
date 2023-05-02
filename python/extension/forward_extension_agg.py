@@ -2,6 +2,8 @@ import torch
 import torda
 import numpy as np
 from pathlib import Path
+import time
+
 torch.set_printoptions(sci_mode=False)
 
 def load_data(p, shape):
@@ -32,6 +34,16 @@ state_dict = {
 }
 
 # torda.func(state_dict)
-torda.initialize(state_dict['norm.weight'], state_dict['norm.bias'], state_dict['qkv.weight'], state_dict['qkv.bias'], state_dict['proj_out.weight'], state_dict['proj_out.bias'])
+torda.initialize(
+    state_dict['norm.weight'], 
+    state_dict['norm.bias'], 
+    state_dict['qkv.weight'], 
+    state_dict['qkv.bias'], 
+    state_dict['proj_out.weight'], 
+    state_dict['proj_out.bias'],
+    n_channels,
+    n_heads,)
+start = time.time()
 out = torda.compute(x, n_channels, n_heads)
-print(f'After compute: {out.shape}\n{out}')
+end = time.time()
+print(f'Cost {end - start} seconds. After compute: {out.shape}\n{out}')

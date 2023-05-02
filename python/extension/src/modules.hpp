@@ -8,36 +8,32 @@
 namespace torda
 {
 using torch::Tensor;
-Tensor preprocess(Tensor x)
+extern std::unique_ptr<torch::nn::GroupNormImpl> norm_layer;
+extern std::unique_ptr<torch::nn::Conv1dImpl> qkv_layer;
+extern std::unique_ptr<torch::nn::Conv1dImpl> proj_out_layer;
+void preprocess(Tensor &x)
 {
     // do reshape and normalization
     auto shape = x.sizes();
     int b = shape[0];
     int c = shape[1];
+
     x.reshape({b, c, -1});
-    return x;
 }
 
-Tensor normalize(Tensor x, Tensor norm_weight, Tensor norm_bias, int n_channels)
+Tensor normalize(const Tensor &x)
 {
     // Parallelize normalization
-    torch::nn::GroupNormImpl norm(32, n_channels);
-    norm.weight = norm_weight;
-    norm.bias = norm_bias;
-
-    return norm.forward(x);
+    return norm_layer->forward(x);
 }
 
-Tensor qkv(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_channels, int kernel_size)
+Tensor qkv(const Tensor &x)
 {
-    torch::nn::Conv1dImpl conv(in_channels, out_channels, kernel_size);
-    conv.weight = weights;
-    conv.bias = bias;
-
-    return conv.forward(x);
+    return qkv_layer->forward(x);
 }
 
-Tensor attention(Tensor qkv, int n_heads)
+// CAUTION: This function modifies the input tensor
+Tensor attention(Tensor &qkv, int n_heads)
 {
     auto shape = qkv.sizes();
     int bs = shape[0];
@@ -55,30 +51,27 @@ Tensor attention(Tensor qkv, int n_heads)
     q *= scale;
     k *= scale;
 
+    // q = torch::einsum("bct,bcs->bts", {q, k});
     q = torch::transpose(q, 1, 2);
     q = torch::matmul(q, k);
     q = torch::softmax(q, -1);
 
+    // v = torch::einsum("bts,bcs->bct", {q, v});
     v = torch::transpose(v, 1, 2);
-    Tensor a = torch::matmul(q, v);
-    a = torch::transpose(a, 1, 2);
+    v = torch::matmul(q, v);
+    v = torch::transpose(v, 1, 2);
 
-    return a.reshape({bs, -1, length});
+    return v.reshape({bs, -1, length});
 }
 
-Tensor proj_out(Tensor x, Tensor weights, Tensor bias, int in_channels, int out_channels, int kernel_size)
+Tensor proj_out(const Tensor &x)
 {
-    torch::nn::Conv1dImpl conv(in_channels, out_channels, kernel_size);
-    conv.weight = weights;
-    conv.bias = bias;
-
-    return conv.forward(x);
+    return proj_out_layer->forward(x);
 }
 
-Tensor postprocess(Tensor x, Tensor h, torch::IntArrayRef shape)
+Tensor postprocess(const Tensor &x, const Tensor &h, torch::IntArrayRef shape)
 {
-    x = x + h;
-    return x.reshape(shape);
+    return (x + h).reshape(shape);
 }
 
 } // namespace torda

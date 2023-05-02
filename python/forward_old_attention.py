@@ -1,4 +1,5 @@
 from attentionblock import AttentionBlock
+import time
 import torch
 from torch import nn
 import numpy as np
@@ -35,5 +36,7 @@ block.load_state_dict(state_dict)
 block = block.cuda()
 
 with torch.no_grad():
+    start = time.time()
     out = block(x)
-    print(f'After attention: {out.shape}\n{out}')
+    end = time.time()
+    print(f'Cost {end - start} seconds. After attention: {out.shape}\n{out}')

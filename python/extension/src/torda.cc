@@ -1,5 +1,6 @@
 #include "modules.hpp"
 #include <iostream>
+#include <memory>
 #include <pybind11/chrono.h>
 #include <pybind11/complex.h>
 #include <pybind11/functional.h>
@@ -14,35 +15,38 @@ std::string hello(const std::string &name)
     return "Saying hello to " + name + " from C++!";
 }
 
-torch::OrderedDict<std::string, torch::Tensor> _state_dict;
+std::unique_ptr<torch::nn::GroupNormImpl> norm_layer;
+std::unique_ptr<torch::nn::Conv1dImpl> qkv_layer;
+std::unique_ptr<torch::nn::Conv1dImpl> proj_out_layer;
 
 // TODO: Load state dict instead of parameters
 void initialize(Tensor norm_weight, Tensor norm_bias, Tensor qkv_weight, Tensor qkv_bias, Tensor proj_out_weight,
-                Tensor proj_out_bias)
+                Tensor proj_out_bias, int n_channels, int n_heads)
 {
-    printf("Loading the parameters...\n");
-    _state_dict.insert("norm.weight", norm_weight);
-    _state_dict.insert("norm.bias", norm_bias);
-    _state_dict.insert("qkv.weight", qkv_weight);
-    _state_dict.insert("qkv.bias", qkv_bias);
-    _state_dict.insert("proj_out.weight", proj_out_weight);
-    _state_dict.insert("proj_out.bias", proj_out_bias);
-    printf("Done loading parameters!\n");
+    norm_layer = std::make_unique<torch::nn::GroupNormImpl>(32, n_channels);
+    qkv_layer = std::make_unique<torch::nn::Conv1dImpl>(n_channels, n_channels * 3, 1);
+    proj_out_layer = std::make_unique<torch::nn::Conv1dImpl>(n_channels, n_channels, 1);
+
+    norm_layer->weight = norm_weight;
+    norm_layer->bias = norm_bias;
+    qkv_layer->weight = qkv_weight;
+    qkv_layer->bias = qkv_bias;
+    proj_out_layer->weight = proj_out_weight;
+    proj_out_layer->bias = proj_out_bias;
 }
 
 Tensor compute(Tensor x, int n_channels, int n_heads)
 {
+    printf("Computing...\n");
     x = x.cuda();
     auto original_shape = x.sizes();
+    torda::preprocess(x);
 
-    // TODO: pass by reference
-    x = torda::preprocess(x);
-    Tensor norm = torda::normalize(x, _state_dict["norm.weight"], _state_dict["norm.bias"], n_channels);
-    Tensor qkv = torda::qkv(norm, _state_dict["qkv.weight"], _state_dict["qkv.bias"], n_channels, n_channels * 3, 1);
-    Tensor h = torda::attention(qkv, n_heads);
-    h = torda::proj_out(h, _state_dict["proj_out.weight"], _state_dict["proj_out.bias"], n_channels, n_channels, 1);
-
-    return torda::postprocess(x, h, torch::IntArrayRef(original_shape));
+    Tensor tensor = torda::normalize(x);
+    tensor = torda::qkv(tensor);
+    tensor = torda::attention(tensor, n_heads);
+    tensor = torda::proj_out(tensor);
+    return torda::postprocess(x, tensor, torch::IntArrayRef(original_shape));
 }
 
 } // namespace torda
