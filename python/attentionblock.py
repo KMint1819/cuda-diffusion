@@ -98,7 +98,10 @@ class AttentionBlock(nn.Module):
     def _forward(self, x):
         b, c, *spatial = x.shape
         x = x.reshape(b, c, -1)
-        qkv = self.qkv(self.norm(x))
+        # return self.norm.weight
+        norm = self.norm(x)
+        # return norm
+        qkv = self.qkv(norm)
         h = self.attention(qkv)
         h = self.proj_out(h)
         return (x + h).reshape(b, c, *spatial)
