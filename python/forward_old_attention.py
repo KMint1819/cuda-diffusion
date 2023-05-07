@@ -22,7 +22,7 @@ x = x.cuda()
 state_dict ={
     'norm.weight': load_data(data_dir / 'norm-weight.txt', (n_channels,)),
     'norm.bias': load_data(data_dir / 'norm-bias.txt', (n_channels,)),
-    'qkv.weight': load_data(data_dir / 'qkv-weight.txt', (n_channels * 3, n_channels, 1)),
+    'qkv.weight': load_data(data_dir / 'qkv-weight.txt', (n_channels, n_channels * 3, 1)),
     'qkv.bias': load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,)),
     'proj_out.weight': load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1)),
     'proj_out.bias': load_data(data_dir / 'proj_out-bias.txt', (n_channels,))

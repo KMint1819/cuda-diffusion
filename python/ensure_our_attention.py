@@ -1,12 +1,12 @@
 '''
-We refactored the original AttentionBlock from attentionblock_o.py to attentionblock.py.
-This code will verify that the outputs of the two implementations are the same.
+Ensure our C++ implementation of the attention block is correct.
 '''
-from attentionblock_o import AttentionBlock as OldAttentionBlock
-from attentionblock import AttentionBlock as NewAttentionBlock
+from attentionblock import AttentionBlock
+from our_attentionblock import AttentionBlock as OurAttentionBlock
 import torch
 import numpy as np
 from pathlib import Path
+torch.set_printoptions(sci_mode=False)
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
@@ -26,18 +26,17 @@ qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
 proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
 proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
 
-oldBlock = OldAttentionBlock(
-    channels = n_channels,
-    num_heads = n_heads,
-    num_head_channels = n_head_channels,
-    use_checkpoint=True)
-
-newBlock = NewAttentionBlock(
+block = AttentionBlock(
     channels = n_channels,
     num_heads = n_heads,
     num_head_channels = n_head_channels)
 
-for k, v in oldBlock.state_dict().items():
+ourBlock= OurAttentionBlock(
+    channels = n_channels,
+    num_heads = n_heads,
+    num_head_channels = n_head_channels)
+
+for k, v in block.state_dict().items():
     print(k, v.shape)
 
 state_dict = {
@@ -48,18 +47,21 @@ state_dict = {
     'proj_out.weight': proj_out_weight,
     'proj_out.bias': proj_out_bias
 }
+block.load_state_dict(state_dict)
+ourBlock.load_state_dict(state_dict)
 
-oldBlock.load_state_dict(state_dict)
-newBlock.load_state_dict(state_dict)
+x = x.cuda()
+block = block.cuda()
+ourBlock = ourBlock.cuda()
 
 with torch.no_grad():
-    old_out = oldBlock(x)
-    new_out = newBlock(x)
+    out = block(x)
+    our_out = ourBlock(x)
 
-    print(f'Old output: ', old_out)
-    print(f'New output: ', new_out)
+    print(f'Original output: ', out)
+    print(f'Out      output: ', our_out)
     # Compare two outputs
-    if torch.allclose(old_out, new_out, atol=1e-6):
+    if torch.allclose(out, our_out, atol=1e-6):
         print('Outputs are the same!')
     else:
         print('BAD!!!')

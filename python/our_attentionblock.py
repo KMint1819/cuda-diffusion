@@ -1,21 +1,7 @@
+from typing import Any, Mapping
 import torch
 from torch import nn
 import torda
-
-class AttentionBlockFunctional(torch.autograd.Function):
-    @staticmethod
-    def forward(x, norm_dict, qkv_dict, proj_out_dict, n_channels, n_heads):
-        b, c, *spatial = x.shape
-        x = torda.preprocess(x, norm_dict['weight'], norm_dict['bias'], n_channels)
-        return x
-
-        # Try to aggregrate these three in the cuda code like the following: 
-        # return ans = torda.compute()
-        qkv = torda.qkv(x, qkv_dict['weight'], qkv_dict['bias'], n_channels, n_channels * 3, 1) 
-        h = torda.attention(qkv, n_heads)
-        h = torda.proj_out(h, proj_out_dict['weight'], proj_out_dict['bias'], n_channels, n_channels, 1)
-        ans = torda.postprocess(x + h, (b, c, *spatial))
-        return ans
 
 class AttentionBlock(nn.Module):
     """
@@ -41,17 +27,30 @@ class AttentionBlock(nn.Module):
             self.num_heads = channels // num_head_channels
         
         self.norm = nn.ParameterDict({
-            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1), requires_grad=False),
-            'bias': nn.Parameter(torch.empty(channels * 3), requires_grad=False)),
+            'weight': nn.Parameter(torch.empty(channels), requires_grad=False),
+            'bias': nn.Parameter(torch.empty(channels), requires_grad=False)
         })
         self.qkv = nn.ParameterDict({
-            'weights': nn.Parameter(torch.empty(channels, channels * 3, 1), requires_grad=False),
-            'bias': nn.Parameter(torch.empty(channels * 3), requires_grad=False)),
+            'weight': nn.Parameter(torch.empty(channels * 3, channels, 1), requires_grad=False),
+            'bias': nn.Parameter(torch.empty(channels * 3), requires_grad=False),
         })
         self.proj_out = nn.ParameterDict({
-            'weights': nn.Parameter(torch.empty(channels, channels, 1), requires_grad=False)),
-            'bias': nn.Parameter(torch.empty(channels), requires_grad=False)),
+            'weight': nn.Parameter(torch.empty(channels, channels, 1), requires_grad=False),
+            'bias': nn.Parameter(torch.empty(channels), requires_grad=False),
         })
+    
+    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True):
+        torda.initialize(
+            self.norm.weight,
+            self.norm.bias,
+            self.qkv.weight,
+            self.qkv.bias,
+            self.proj_out.weight,
+            self.proj_out.bias,
+            self.channels,
+            self.num_heads,
+        )
+        return super().load_state_dict(state_dict, strict)
 
     def forward(self, x):
-        return AttentionBlockFunctional.apply(x, self.norm, self.qkv, self.proj_out, self.proj_out_dict, self.channels, self.num_heads)
+        return torda.compute(x, self.channels, self.num_heads)

@@ -142,6 +142,7 @@ class AttentionBlock(nn.Module):
         self.use_checkpoint = use_checkpoint
         self.norm = normalization(channels)
         self.qkv = conv_nd(1, channels, channels * 3, 1)
+        print('shape: ', self.qkv.weight.shape)
         self.attention = QKVAttentionLegacy(self.num_heads)
 
         self.proj_out = zero_module(conv_nd(1, channels, channels, 1))
