@@ -1,20 +1,29 @@
 rai:
   version: 0.2
-  image: kmint1819/gten:local
+  image: kmint1819/gten:rai4
 resources:
   cpu:
     architecture: amd64
   gpu:
     count: 1
-  network: false
+  network: true
   cache: false
 commands:
   build:
-    # - ls
-    # - pwd
+    - pwd
+    # - echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+    # - apt update
+    # - echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+    # - apt update
+    # - apt install -y --fix-missing libsm6
+    - ls /home/clip-vit-large-patch14
+    - cat /home/clip-vit-large-patch14/tokenizer.json
+    - /bin/sh -c 'cd /src/ControlNet && TRANSFORMERS_OFFLINE=1 python3.8 my_scribble2image.py'
     # - python3.8 /src/python/play.py
-    - cmake /src
-    - make
+
+    # Below is for C++ profiling
+    # - cmake /src
+    # - make
     # - nsys profile --stats=true -o analysis_file ./gten
-    - nv-nsight-cu-cli --section '.*' -o analysis_file python3.8 /src/python/forward_old_attention.py
+    # - nv-nsight-cu-cli --section '.*' -o analysis_file python3.8 /src/python/forward_old_attention.py
     # - ./gten -a
