@@ -28,6 +28,19 @@ expensive off-chip DRAM accesses.
 rai -p .
 ```
 
+## How to configure rai build commands
+- Run controlnet with out attentionblock implementation
+```yaml
+...
+commands:
+  build:
+    - /bin/sh -c 'cd /src/python/extension && rm -r build/ dist/ torda*'
+    - /bin/sh -c 'cd /src/python/extension && python3.8 -m pip install ./'
+    - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
+```
+
+
+
 ## TODO:
 1. ~Generate the fake data for running the kernel from the AttentionBlock~
 1. Build unittest for verifying the correctness of the kernel 
