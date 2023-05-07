@@ -31,7 +31,7 @@ rai -p .
 ## TODO:
 1. ~Generate the fake data for running the kernel from the AttentionBlock~
 1. Build unittest for verifying the correctness of the kernel 
-1. Move the model weights into the docker container and push
+1. ~Move the model weights into the docker container and push~
 1. Integrate pytorch & cuda-c
     1. ~Find necessary modules from the ControlNet code to make sure what we need to implement~
     1. ~Find out how to connect the C++ code to pytorch~
@@ -42,6 +42,8 @@ rai -p .
 1. Implement the cuda operations in an AttentionBlock
     1. Conv1D
     1. QKV
+1. ~Plug our attentionblock implementation into the ControlNet model and load weights successfully~
+    1. Provide options to switch between the original and our implementation
 1. Profiling 
     1. Original AttentionBlock 
     1. Our implementation
