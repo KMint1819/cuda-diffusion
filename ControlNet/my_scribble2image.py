@@ -18,6 +18,7 @@ from cldm.ddim_hacked import DDIMSampler
 
 model = create_model('./models/cldm_v15.yaml').cpu()
 model.load_state_dict(load_state_dict('/home/control_sd15_scribble.pth', location='cuda'))
+model = model.cuda()
 ddim_sampler = DDIMSampler(model)
 
 def process(input_image, prompt, a_prompt, n_prompt, num_samples, image_resolution, ddim_steps, guess_mode, strength, scale, seed, eta):
@@ -80,7 +81,7 @@ def main(args):
         input_image, prompt, a_prompt, n_prompt, num_samples, image_resolution, ddim_steps, guess_mode, strength, scale, seed, eta]
     print(f'ips: {ips[0].shape}, {ips[1:]}')
     output = process(*ips)
-    print(f'output image: {output.shape}')
+    print(f'output image: {output}')
     output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
     cv2.imwrite(str(args.out_path / 'output.png'), output)
 

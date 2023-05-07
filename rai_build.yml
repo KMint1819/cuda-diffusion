@@ -6,20 +6,11 @@ resources:
     architecture: amd64
   gpu:
     count: 1
-  network: true
+  network: false
   cache: false
 commands:
   build:
-    - pwd
-    # - echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
-    # - apt update
-    # - echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
-    # - apt update
-    # - apt install -y --fix-missing libsm6
-    - ls /home/clip-vit-large-patch14
-    - cat /home/clip-vit-large-patch14/tokenizer.json
-    - /bin/sh -c 'cd /src/ControlNet && TRANSFORMERS_OFFLINE=1 python3.8 my_scribble2image.py'
-    # - python3.8 /src/python/play.py
+    - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
 
     # Below is for C++ profiling
     # - cmake /src
