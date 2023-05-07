@@ -80,10 +80,11 @@ def main(args):
     ips = [
         input_image, prompt, a_prompt, n_prompt, num_samples, image_resolution, ddim_steps, guess_mode, strength, scale, seed, eta]
     print(f'ips: {ips[0].shape}, {ips[1:]}')
-    output = process(*ips)
-    print(f'output image: {output}')
-    output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(str(args.out_path / 'output.png'), output)
+    outs = process(*ips)
+    for i, out in enumerate(outs):
+        out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(str(args.out_path / f'output-{i}.png'), out)
+    print("Images saved to ", str(args.out_path.absolute()))
 
 if __name__ == '__main__':
     parser = ArgumentParser()
