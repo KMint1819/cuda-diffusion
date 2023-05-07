@@ -3,7 +3,7 @@ import torch
 from torch import nn
 import torda
 
-class AttentionBlock(nn.Module):
+class OurAttentionBlock(nn.Module):
     """
     An attention block that allows spatial positions to attend to each other.
     Originally ported from here, but adapted to the N-d case.

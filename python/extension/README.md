@@ -2,7 +2,7 @@
 1. Build the library
     ```bash
     cd python/extension
-    python setup.py install
+    pip install ./
     ```
     - You might have to remove the generated folders if you want to rebuild
 2. How to use the library
