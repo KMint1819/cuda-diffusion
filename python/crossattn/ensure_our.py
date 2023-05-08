@@ -39,12 +39,11 @@ for k, v in truncated.state_dict().items():
 print('=' * 80)
 
 truncated.load_state_dict(state_dict)
-out = our.load_state_dict(state_dict)
-print(out)
+our.load_state_dict(state_dict)
 
 with torch.no_grad():
-    truncated_out = truncated(x)
-    our_out = our(x)
+    truncated_out = truncated(x).cuda()
+    our_out = our(x).cuda()
 
     print(f'Truncated output: ', truncated_out)
     print(f'Our       output: ', our_out)

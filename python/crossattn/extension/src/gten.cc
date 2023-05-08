@@ -54,29 +54,22 @@ void initialize(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tens
     }
 }
 
-// Tensor compute(Tensor x, int n_channels, int n_heads)
-// {
-//     printf("Computing...\n");
-//     x = x.cuda();
-//     auto original_shape = x.sizes();
-//     gten::preprocess(x);
-
-//     Tensor tensor = gten::normalize(x);
-//     tensor = gten::qkv(tensor);
-//     tensor = gten::attention(tensor, n_heads);
-//     tensor = gten::proj_out(tensor);
-//     return gten::postprocess(x, tensor, torch::IntArrayRef(original_shape));
-// }
+Tensor compute(Tensor x, Tensor context)
+{
+    printf("Computing...\n");
+    x = x.cuda();
+    context = context.cuda();
+    return context;
+}
 
 } // namespace CrossAttention
-
 } // namespace gten
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
     m.def("hello", &gten::hello, "Say hello from C++!");
     m.def("initialize", &gten::CrossAttention::initialize, "Initialize the model");
-    // m.def("compute", &gten::compute, "Initialize the model");
+    m.def("compute", &gten::CrossAttention::compute, "Initialize the model");
 
     // // modules.hpp
     // m.def("preprocess", &gten::preprocess, "Preprocess the data");

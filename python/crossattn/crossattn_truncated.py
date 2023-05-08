@@ -49,6 +49,7 @@ class CrossAttention(nn.Module):
     def forward(self, x, context=None, mask=None):
         # print('x.shape: ', x.shape)
         context = default(context, x)
+        return context
         h = self.heads
 
         q = self.to_q(x)
