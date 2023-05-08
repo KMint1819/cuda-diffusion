@@ -106,6 +106,6 @@ class CrossAttention(nn.Module):
         out = out.permute(0, 2, 1, 3)
         out = out.reshape(b, n, h * d)
 
-        out = self.to_out(out)
-        # print('out.shape: ', out.shape)
+        out = self.to_out[0](out)
+        out = self.to_out[1](out)
         return out

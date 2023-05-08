@@ -25,14 +25,13 @@ CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int di
     to_k_option.bias(false);
     torch::nn::LinearOptions to_v_option(context_dim, inner_dim);
     to_v_option.bias(false);
-    torch::nn::LinearOptions to_out_option(inner_dim, query_dim);
-    torch::nn::DropoutOptions dropout_option(dropout);
 
     _layer_to_q = std::make_unique<torch::nn::LinearImpl>(to_q_option);
     _layer_to_k = std::make_unique<torch::nn::LinearImpl>(to_k_option);
     _layer_to_v = std::make_unique<torch::nn::LinearImpl>(to_v_option);
-    _layer_to_out = std::make_unique<torch::nn::LinearImpl>(to_out_option);
-    _layer_dropout = std::make_unique<torch::nn::DropoutImpl>(dropout_option);
+    _layer_to_out_0 = std::make_unique<torch::nn::LinearImpl>(inner_dim, query_dim);
+    _layer_to_out_1 = std::make_unique<torch::nn::DropoutImpl>(dropout);
+
     // print params
     printf("=========================================\n");
     printf("query_dim: %d\n", query_dim);
@@ -45,15 +44,15 @@ CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int di
 }
 
 // TODO: Load state dict instead of parameters
-void CrossAttention::loadData(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tensor to_out_weight,
-                              Tensor to_out_bias)
+void CrossAttention::loadData(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tensor to_out_0_weight,
+                              Tensor to_out_0_bias)
 {
     // Transfer to gpu
     _layer_to_q->weight = to_q_weight;
     _layer_to_k->weight = to_k_weight;
     _layer_to_v->weight = to_v_weight;
-    _layer_to_out->weight = to_out_weight;
-    _layer_to_out->bias = to_out_bias;
+    _layer_to_out_0->weight = to_out_0_weight;
+    _layer_to_out_0->bias = to_out_0_bias;
 }
 
 void CrossAttention::to(torch::Device device)
@@ -62,8 +61,8 @@ void CrossAttention::to(torch::Device device)
     _layer_to_q->to(device);
     _layer_to_k->to(device);
     _layer_to_v->to(device);
-    _layer_to_out->to(device);
-    _layer_dropout->to(device);
+    _layer_to_out_0->to(device);
+    _layer_to_out_1->to(device);
 }
 
 Tensor CrossAttention::rearrange(Tensor tensor, int h) const
@@ -76,8 +75,16 @@ Tensor CrossAttention::rearrange(Tensor tensor, int h) const
     tensor = tensor.reshape({b * h, n, d});
     return tensor;
 }
+
 Tensor CrossAttention::compute(Tensor x, Tensor context)
 {
+    _layer_to_q->eval();
+    _layer_to_k->eval();
+    _layer_to_v->eval();
+    _layer_to_out_0->eval();
+    _layer_to_out_1->eval();
+    torch::NoGradGuard nograd;
+
     printf("Computing...\n");
     if (_device == torch::kCPU)
         _device = torch::kCUDA;
@@ -106,7 +113,9 @@ Tensor CrossAttention::compute(Tensor x, Tensor context)
     out = out.reshape({b, h, n, d});
     out = out.permute({0, 2, 1, 3});
     out = out.reshape({b, n, h * d});
-    out = _layer_to_out->forward(out);
+
+    out = _layer_to_out_0->forward(x);
+    out = _layer_to_out_1->forward(out);
     return out;
 }
 } // namespace gten
@@ -117,16 +126,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     py::class_<gten::CrossAttention>(m, "GtenCrossAttention")
         .def(py::init<int, int, int, int, double>(), py::arg("query_dim"), py::arg("context_dim"), py::arg("heads"),
              py::arg("dim_head"), py::arg("dropout"))
-        // .def("rearrange", &gten::CrossAttention::rearrange, "Rearrange the tensor")
         .def("loadData", &gten::CrossAttention::loadData, "Initialize the model")
         .def("compute", &gten::CrossAttention::compute, "Initialize the model")
         .def("to", &gten::CrossAttention::to, "Move the model to device");
-
-    // // modules.hpp
-    // m.def("preprocess", &gten::preprocess, "Preprocess the data");
-    // m.def("normalize", &gten::normalize, "Normalize the data");
-    // m.def("qkv", &gten::qkv, "Run qkv forward pass");
-    // m.def("attention", &gten::attention, "Run attention forward pass");
-    // m.def("proj_out", &gten::proj_out, "Run proj_out(feed forward) forward pass");
-    // m.def("postprocess", &gten::postprocess, "Postprocess the data");
 }

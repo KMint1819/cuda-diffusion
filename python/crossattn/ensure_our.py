@@ -3,11 +3,12 @@ We refactored the original CrossAttention from copied_crossattn.py to truncated_
 This code will verify that the outputs of the two implementations are the same.
 '''
 from crossattn_truncated import CrossAttention as CrossAttention1
-from crossattn_our     import CrossAttention as CrossAttention2
+from crossattn_our import CrossAttention as CrossAttention2
 import torch
 import numpy as np
 from pathlib import Path
 torch.set_printoptions(sci_mode=False)
+tolerance = 1e-6
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
@@ -44,20 +45,26 @@ print('=' * 80)
 attn1.load_state_dict(state_dict)
 attn2.load_state_dict(state_dict)
 
+attn1.eval()
+attn2.eval()
 with torch.no_grad():
-    out1 = attn1(x, context)
-    out1 = attn1(out1, context)
-    out2 = attn2(x, context)
-    out2 = attn2(out2, context)
+    out1 = x.clone()
+    out2 = x.clone()
+    for i in range(10):
+        out1 = attn1(out1, context)
+        out2 = attn2(out2, context)
 
     print(f'Truncated output: ', out1)
     print(f'Ours      output: ', out2)
     # Compare two outputs
-    if torch.allclose(out1, out2, atol=1e-6):
+    
+    if torch.allclose(out1, out2, atol=tolerance):
         print('Outputs are the same!')
     else:
-
-        print('Number difference: ', torch.unique(out1[out1 == out2], return_counts=True))
-        # print('Difference: ', torch.diff(out1, out2))
-        # print('difference: ', torch.max(torch.abs(out1 - out2)))
+        diffs = torch.argwhere((out1 - out2) > tolerance)
+        print(f'Number of different elements: {diffs.shape}/{torch.numel(out1)}')
+        print('diff shape: ', diffs.shape)
+        print('out shape: ', out1.shape)
+        for i, diff in enumerate(diffs[:10]):
+            print(f'difference {i}: {out1[diff[0], diff[1], diff[2]]}, {out2[diff[0], diff[1], diff[2]]}')
         print('BAD!!!')
