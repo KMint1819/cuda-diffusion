@@ -141,7 +141,6 @@ class SpatialSelfAttention(nn.Module):
 
         return x+h_
 
-
 class CrossAttention(nn.Module):
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
         super().__init__()
@@ -159,6 +158,18 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
+        print('=' * 80)
+        print('query_dim: ', query_dim)
+        print('context_dim: ', context_dim)
+        print('heads: ', heads)
+        print('dim_head: ', dim_head)
+        print('dropout: ', dropout)
+        print('inner_dim: ', inner_dim)
+        print('to_q.weight.shape: ', self.to_q.weight.shape)
+        print('to_k.weight.shape: ', self.to_k.weight.shape)
+        print('to_v.weight.shape: ', self.to_v.weight.shape)
+        print('to_out[0].weight.shape: ', self.to_out[0].weight.shape)
+        print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
 
     def forward(self, x, context=None, mask=None):
         h = self.heads
@@ -171,7 +182,9 @@ class CrossAttention(nn.Module):
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
         # force cast to fp32 to avoid overflowing
+        print('_ATTN_PRECISION: ', _ATTN_PRECISION)
         if _ATTN_PRECISION =="fp32":
+            print('###'*30)
             with torch.autocast(enabled=False, device_type = 'cuda'):
                 q, k = q.float(), k.float()
                 sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
@@ -191,7 +204,8 @@ class CrossAttention(nn.Module):
 
         out = einsum('b i j, b j d -> b i d', sim, v)
         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-        return self.to_out(out)
+        out = self.to_out(out)
+        return out
 
 
 class MemoryEfficientCrossAttention(nn.Module):
@@ -266,7 +280,8 @@ class BasicTransformerBlock(nn.Module):
         self.checkpoint = checkpoint
 
     def forward(self, x, context=None):
-        return checkpoint(self._forward, (x, context), self.parameters(), self.checkpoint)
+        out = checkpoint(self._forward, (x, context), self.parameters(), self.checkpoint)
+        return out
 
     def _forward(self, x, context=None):
         x = self.attn1(self.norm1(x), context=context if self.disable_self_attn else None) + x

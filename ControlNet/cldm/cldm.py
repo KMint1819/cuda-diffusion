@@ -14,11 +14,10 @@ from einops import rearrange, repeat
 from torchvision.utils import make_grid
 from ldm.modules.attention import SpatialTransformer
 from ldm.modules.diffusionmodules.openaimodel import (
-    UNetModel, TimestepEmbedSequential, ResBlock, Downsample, AttentionBlock, OurAttentionBlock)
+    UNetModel, TimestepEmbedSequential, ResBlock, Downsample, AttentionBlock)
 from ldm.models.diffusion.ddpm import LatentDiffusion
 from ldm.util import log_txt_as_img, exists, instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
-
 
 class ControlledUnetModel(UNetModel):
     def forward(self, x, timesteps=None, context=None, control=None, only_mid_control=False, **kwargs):
@@ -197,7 +196,7 @@ class ControlNet(nn.Module):
 
                     if not exists(num_attention_blocks) or nr < num_attention_blocks[level]:
                         layers.append(
-                            OurAttentionBlock(
+                            AttentionBlock(
                                 ch,
                                 use_checkpoint=use_checkpoint,
                                 num_heads=num_heads,
@@ -256,7 +255,7 @@ class ControlNet(nn.Module):
                 use_checkpoint=use_checkpoint,
                 use_scale_shift_norm=use_scale_shift_norm,
             ),
-            OurAttentionBlock(
+            AttentionBlock(
                 ch,
                 use_checkpoint=use_checkpoint,
                 num_heads=num_heads,

@@ -26,61 +26,6 @@ def convert_module_to_f16(x):
 def convert_module_to_f32(x):
     pass
 
-import torch
-import torda
-
-class OurAttentionBlock(nn.Module):
-    """
-    An attention block that allows spatial positions to attend to each other.
-    Originally ported from here, but adapted to the N-d case.
-    https://github.com/hojonathanho/diffusion/blob/1e0dceb3b3495bbe19116a5e1b3596cd0706c543/diffusion_tf/models/unet.py#L66.
-    """
-
-    def __init__(
-        self,
-        channels,
-        num_heads=1,
-        num_head_channels=-1,
-    ):
-        super().__init__()
-        self.channels = channels
-        if num_head_channels == -1:
-            self.num_heads = num_heads
-        else:
-            assert (
-                channels % num_head_channels == 0
-            ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
-            self.num_heads = channels // num_head_channels
-        
-        self.norm = nn.ParameterDict({
-            'weight': nn.Parameter(torch.empty(channels), requires_grad=False),
-            'bias': nn.Parameter(torch.empty(channels), requires_grad=False)
-        })
-        self.qkv = nn.ParameterDict({
-            'weight': nn.Parameter(torch.empty(channels * 3, channels, 1), requires_grad=False),
-            'bias': nn.Parameter(torch.empty(channels * 3), requires_grad=False),
-        })
-        self.proj_out = nn.ParameterDict({
-            'weight': nn.Parameter(torch.empty(channels, channels, 1), requires_grad=False),
-            'bias': nn.Parameter(torch.empty(channels), requires_grad=False),
-        })
-    
-    def load_state_dict(self, state_dict, strict: bool = True):
-        torda.initialize(
-            self.norm.weight,
-            self.norm.bias,
-            self.qkv.weight,
-            self.qkv.bias,
-            self.proj_out.weight,
-            self.proj_out.bias,
-            self.channels,
-            self.num_heads,
-        )
-        return super().load_state_dict(state_dict, strict)
-
-    def forward(self, x):
-        return torda.compute(x, self.channels, self.num_heads)
-
 ## go
 class AttentionPool2d(nn.Module):
     """
@@ -365,6 +310,9 @@ class AttentionBlock(nn.Module):
         self.proj_out = zero_module(conv_nd(1, channels, channels, 1))
 
     def forward(self, x):
+        print('#' * 80)
+        print('#' * 80)
+        print('#' * 80)
         return checkpoint(self._forward, (x,), self.parameters(), True)   # TODO: check checkpoint usage, is True # TODO: fix the .half call!!!
         #return pt_checkpoint(self._forward, x)  # pytorch
 
@@ -461,7 +409,6 @@ class QKVAttention(nn.Module):
     @staticmethod
     def count_flops(model, _x, y):
         return count_flops_attn(model, _x, y)
-
 
 class UNetModel(nn.Module):
     """
@@ -634,7 +581,7 @@ class UNetModel(nn.Module):
 
                     if not exists(num_attention_blocks) or nr < num_attention_blocks[level]:
                         layers.append(
-                            OurAttentionBlock(
+                            AttentionBlock(
                                 ch,
                                 use_checkpoint=use_checkpoint,
                                 num_heads=num_heads,
@@ -691,7 +638,7 @@ class UNetModel(nn.Module):
                 use_checkpoint=use_checkpoint,
                 use_scale_shift_norm=use_scale_shift_norm,
             ),
-            OurAttentionBlock(
+            AttentionBlock(
                 ch,
                 use_checkpoint=use_checkpoint,
                 num_heads=num_heads,
@@ -745,7 +692,7 @@ class UNetModel(nn.Module):
 
                     if not exists(num_attention_blocks) or i < num_attention_blocks[level]:
                         layers.append(
-                            OurAttentionBlock(
+                            AttentionBlock(
                                 ch,
                                 use_checkpoint=use_checkpoint,
                                 num_heads=num_heads_upsample,
