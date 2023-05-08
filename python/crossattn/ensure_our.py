@@ -1,6 +1,5 @@
 '''
-We refactored the original CrossAttention from copied_crossattn.py to truncated_crossattn.py.
-This code will verify that the outputs of the two implementations are the same.
+This code will verify that the outputs of the two implementations (truncated, ours) are the same.
 '''
 from crossattn_truncated import CrossAttention as TruncatedCrossAttention
 from crossattn_our import CrossAttention as OurCrossAttention
