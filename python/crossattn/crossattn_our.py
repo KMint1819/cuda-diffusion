@@ -2,6 +2,7 @@
 Truncated CrossAttention
 '''
 import math
+from typing import Any, Mapping
 import torch
 from torch import nn
 from inspect import isfunction
@@ -23,17 +24,24 @@ class CrossAttention(nn.Module):
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
 
-        self.scale = dim_head ** -0.5
+        self.query_dim = query_dim
+        self.context_dim = context_dim
         self.heads = heads
+        self.dim_head = dim_head
+        self.dropout = dropout
 
-        self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
-        self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
-        self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
-
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, query_dim),
-            nn.Dropout(dropout)
-        )
+    def load_state_dict(self, state_dict, strict=True):
+        gten.initialize(state_dict['to_q.weight'],
+                                    state_dict['to_k.weight'],
+                                    state_dict['to_v.weight'],
+                                    state_dict['to_out.0.weight'],
+                                    state_dict['to_out.0.bias'],
+                                    self.query_dim,
+                                    self.context_dim,
+                                    self.heads,
+                                    self.dim_head,
+                                    self.dropout)
+        return super().load_state_dict(state_dict, strict)
 
     def forward(self, x, context=None, mask=None):
         # print('x.shape: ', x.shape)

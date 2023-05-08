@@ -1,67 +1,55 @@
 '''
-Ensure our C++ implementation of the attention block is correct.
+We refactored the original CrossAttention from copied_crossattn.py to truncated_crossattn.py.
+This code will verify that the outputs of the two implementations are the same.
 '''
-from python.crossattn.crossattn_truncated import AttentionBlock
-from our_attentionblock import AttentionBlock as OurAttentionBlock
+from crossattn_truncated import CrossAttention as TruncatedCrossAttention
+from crossattn_our import CrossAttention as OurCrossAttention
 import torch
 import numpy as np
 from pathlib import Path
-torch.set_printoptions(sci_mode=False)
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
     tensor = torch.from_numpy(raw).reshape(shape)
     return tensor
 
-n_channels = 64 # Must be a multiple of n_head_channels
-n_heads = 8
-n_head_channels = 32 # Must be a multiple of 32
-
-data_dir = Path(__file__).cwd().parent / 'data'
-x = load_data(data_dir / 'input.txt', (1, n_channels, 32))
-norm_weight = load_data(data_dir / 'norm-weight.txt', (n_channels,))
-norm_bias = load_data(data_dir / 'norm-bias.txt', (n_channels,))
-qkv_weight = load_data(data_dir / 'qkv-weight.txt', (n_channels * 3, n_channels, 1))
-qkv_bias = load_data(data_dir / 'qkv-bias.txt', (n_channels * 3,))
-proj_out_weight = load_data(data_dir / 'proj_out-weight.txt', (n_channels, n_channels, 1))
-proj_out_bias = load_data(data_dir / 'proj_out-bias.txt', (n_channels,))
-
-block = AttentionBlock(
-    channels = n_channels,
-    num_heads = n_heads,
-    num_head_channels = n_head_channels)
-
-ourBlock= OurAttentionBlock(
-    channels = n_channels,
-    num_heads = n_heads,
-    num_head_channels = n_head_channels)
-
-for k, v in block.state_dict().items():
-    print(k, v.shape)
-
-state_dict = {
-    'norm.weight': norm_weight,
-    'norm.bias': norm_bias,
-    'qkv.weight': qkv_weight,
-    'qkv.bias': qkv_bias,
-    'proj_out.weight': proj_out_weight,
-    'proj_out.bias': proj_out_bias
+kwargs = {
+    'query_dim': 320,
+    'context_dim': 320,
+    'heads': 8,
+    'dim_head': 40,
+    'dropout': 0.0,
 }
-block.load_state_dict(state_dict)
-ourBlock.load_state_dict(state_dict)
 
-x = x.cuda()
-block = block.cuda()
-ourBlock = ourBlock.cuda()
+data_dir = Path(__file__).cwd().parent.parent / 'data'
+x = load_data(data_dir / 'input.txt', (1, 4096, 320))
+state_dict = {
+    'to_q.weight': load_data(data_dir / 'to_q-weight.txt', (320, 320)),
+    'to_k.weight': load_data(data_dir / 'to_k-weight.txt', (320, 320)),
+    'to_v.weight': load_data(data_dir / 'to_v-weight.txt', (320, 320)),
+    'to_out.0.weight': load_data(data_dir / 'to_out-0-weight.txt', (320, 320)),
+    'to_out.0.bias': load_data(data_dir / 'to_out-0-bias.txt', (320,)),
+}
+
+truncated = TruncatedCrossAttention(**kwargs)
+our = OurCrossAttention(**kwargs)
+print('=' * 80)
+for k, v in truncated.state_dict().items():
+    print(k, v.shape)
+print('=' * 80)
+
+truncated.load_state_dict(state_dict)
+out = our.load_state_dict(state_dict)
+print(out)
 
 with torch.no_grad():
-    out = block(x)
-    our_out = ourBlock(x)
+    truncated_out = truncated(x)
+    our_out = our(x)
 
-    print(f'Original output: ', out)
-    print(f'Out      output: ', our_out)
+    print(f'Truncated output: ', truncated_out)
+    print(f'Our       output: ', our_out)
     # Compare two outputs
-    if torch.allclose(out, our_out, atol=1e-6):
+    if torch.allclose(truncated_out, our_out, atol=1e-6):
         print('Outputs are the same!')
     else:
         print('BAD!!!')

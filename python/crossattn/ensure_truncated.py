@@ -33,6 +33,10 @@ state_dict = {
 
 copied = CopiedCrossAttention(**kwargs)
 truncated = TruncatedCrossAttention(**kwargs)
+print('=' * 80)
+for k, v in copied.state_dict().items():
+    print(k, v.shape)
+print('=' * 80)
 
 copied.load_state_dict(state_dict)
 truncated.load_state_dict(state_dict)
