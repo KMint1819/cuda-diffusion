@@ -242,12 +242,13 @@ class MemoryEfficientCrossAttention(nn.Module):
         )
         return self.to_out(out)
 
-# from ldm.modules.crossattn_copied import CrossAttention as CopiedCrossAttention
-from ldm.modules.crossattn_our import CrossAttention as OurCrossAttention
+# from gten import CopiedCrossAttention as ToggleCrossAttention
+# from gten import TruncatedCrossAttention as ToggleCrossAttention
+from gten import OurCrossAttention as ToggleCrossAttention
 
 class BasicTransformerBlock(nn.Module):
     ATTENTION_MODES = {
-        "softmax": OurCrossAttention,  # vanilla attention
+        "softmax": ToggleCrossAttention,  # vanilla attention
         "softmax-xformers": MemoryEfficientCrossAttention
     }
     def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True, checkpoint=True,

@@ -8,7 +8,7 @@ from torch import nn
 from inspect import isfunction
 from einops import rearrange, repeat
 import os
-from gten import GtenCrossAttention
+from gten_backend import GtenCrossAttention
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def exists(val):
@@ -19,6 +19,7 @@ def default(val, d):
         return val
     return d() if isfunction(d) else d
 
+# TODO: Make whole thing in C++
 class CrossAttention(nn.Module):
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
         super().__init__()
@@ -45,6 +46,14 @@ class CrossAttention(nn.Module):
                 'bias': nn.Parameter(torch.Tensor(query_dim))
             })
         )
+        print('\n\n', "#" * 80)
+        print("query_dim: ", query_dim)
+        print("context_dim: ", context_dim)
+        print("heads: ", heads)
+        print("dim_head: ", dim_head)
+        print("dropout: ", dropout)
+        print("inner_dim: ", inner_dim)
+        print("#" * 80)
         self.backend = GtenCrossAttention(self.query_dim, self.context_dim, self.heads, self.dim_head, self.dropout)
 
     def load_state_dict(self, state_dict, strict=True):
@@ -55,10 +64,11 @@ class CrossAttention(nn.Module):
                         self.to_out[0].bias)
         return super().load_state_dict(state_dict, strict)
 
+    def to(self, device):
+        self.backend.to(device)
+        return super().to(device)
+
     # Mask was never specified in ControlNet
     def forward(self, x, context=None, mask=None):
-        # print('x.shape: ', x.shape)
         context = default(context, x)
-        x = x.to(device)
-        context = context.to(device)
         return self.backend.compute(x, context)

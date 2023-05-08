@@ -33,18 +33,13 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
-        # print('=' * 80)
-        # print('query_dim: ', query_dim)
-        # print('context_dim: ', context_dim)
-        # print('heads: ', heads)
-        # print('dim_head: ', dim_head)
-        # print('dropout: ', dropout)
-        # print('inner_dim: ', inner_dim)
-        # print('to_q.weight.shape: ', self.to_q.weight.shape)
-        # print('to_k.weight.shape: ', self.to_k.weight.shape)
-        # print('to_v.weight.shape: ', self.to_v.weight.shape)
-        # print('to_out[0].weight.shape: ', self.to_out[0].weight.shape)
-        # print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
+        print('\n', '=' * 80)
+        print('query_dim: ', query_dim)
+        print('context_dim: ', context_dim)
+        print('heads: ', heads)
+        print('dim_head: ', dim_head)
+        print('dropout: ', dropout)
+        print('inner_dim: ', inner_dim)
 
     def rearrange(self, tensor, h):
         b, n = tensor.shape[:2]
@@ -55,8 +50,10 @@ class CrossAttention(nn.Module):
         return tensor
 
     def forward(self, x, context=None, mask=None):
-        # print('x.shape: ', x.shape)
         context = default(context, x)
+        print('\n', '#' * 80)
+        print('x.shape: ', x.shape)
+        print('context.shape: ', context.shape)
         h = self.heads
 
         q = self.to_q(x)
@@ -72,6 +69,9 @@ class CrossAttention(nn.Module):
 
         # TODO: make this look better
         # q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        b = q.shape[0]
+        n = q.shape[1]
+        d = q.shape[2] // h
         q = self.rearrange(q, h)
         k = self.rearrange(k, h)
         v = self.rearrange(v, h)
@@ -105,9 +105,9 @@ class CrossAttention(nn.Module):
         # change to normal operations
         # out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
         
-        out = out.reshape(1, 8, 4096, 40)
+        out = out.reshape(b, h, n, d)
         out = out.permute(0, 2, 1, 3)
-        out = out.reshape(1, 4096, 320)
+        out = out.reshape(b, n, h * d)
 
         out = self.to_out(out)
         # print('out.shape: ', out.shape)
