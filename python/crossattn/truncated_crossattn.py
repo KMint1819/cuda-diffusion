@@ -1,105 +1,80 @@
+'''
+Truncated CrossAttention
+'''
 import math
 import torch
 from torch import nn
-import torch.utils.checkpoint
+from inspect import isfunction
+from einops import rearrange, repeat
+import os
 
+def exists(val):
+    return val is not None
 
-class GroupNorm32(nn.GroupNorm):
-    def forward(self, x):
-        return super().forward(x.float()).type(x.dtype)
+def default(val, d):
+    if exists(val):
+        return val
+    return d() if isfunction(d) else d
 
-def normalization(channels):
-    """
-    Make a standard normalization layer.
-    :param channels: number of input channels.
-    :return: an nn.Module for normalization.
-    """
-    return GroupNorm32(32, channels)
-
-def zero_module(module):
-    """
-    Zero out the parameters of a module and return it.
-    """
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
-
-class QKVAttentionLegacy(nn.Module):
-    """
-    A module which performs QKV attention. Matches legacy QKVAttention + input/ouput heads shaping
-    """
-
-    def __init__(self, n_heads):
+class CrossAttention(nn.Module):
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
         super().__init__()
-        self.n_heads = n_heads
+        inner_dim = dim_head * heads
+        context_dim = default(context_dim, query_dim)
 
-    def forward(self, qkv):
-        """
-        Apply QKV attention.
-        :param qkv: an [N x (H * 3 * C) x T] tensor of Qs, Ks, and Vs.
-        :return: an [N x (H * C) x T] tensor after attention.
-        """
-        bs, width, length = qkv.shape
-        assert width % (3 * self.n_heads) == 0
-        ch = width // (3 * self.n_heads)
-        qkv = qkv.reshape(bs * self.n_heads, ch * 3, length)
-        q, k, v = qkv.split(ch, dim=1)
+        self.scale = dim_head ** -0.5
+        self.heads = heads
 
-        scale = 1 / math.sqrt(math.sqrt(ch))
-        q *= scale
-        k *= scale
+        self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
+        self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
+        self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        # ein_weight = torch.einsum("bct,bcs->bts", q * scale, k * scale)
-        weight = torch.transpose(q, 1, 2)
-        weight = weight @ k
-        weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
+        self.to_out = nn.Sequential(
+            nn.Linear(inner_dim, query_dim),
+            nn.Dropout(dropout)
+        )
+        # print('=' * 80)
+        # print('query_dim: ', query_dim)
+        # print('context_dim: ', context_dim)
+        # print('heads: ', heads)
+        # print('dim_head: ', dim_head)
+        # print('dropout: ', dropout)
+        # print('inner_dim: ', inner_dim)
+        # print('to_q.weight.shape: ', self.to_q.weight.shape)
+        # print('to_k.weight.shape: ', self.to_k.weight.shape)
+        # print('to_v.weight.shape: ', self.to_v.weight.shape)
+        # print('to_out[0].weight.shape: ', self.to_out[0].weight.shape)
+        # print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
 
-        # ein_a = torch.einsum("bts,bcs->bct", weight, v)
-        v = torch.transpose(v, 1, 2)
-        a = weight @ v
-        a = torch.transpose(a, 1, 2)
+    def forward(self, x, context=None, mask=None):
+        # print('x.shape: ', x.shape)
+        context = default(context, x)
+        h = self.heads
 
-        return a.reshape(bs, -1, length)
+        q = self.to_q(x)
+        k = self.to_k(context)
+        v = self.to_v(context)
 
-class AttentionBlock(nn.Module):
-    """
-    An attention block that allows spatial positions to attend to each other.
-    Originally ported from here, but adapted to the N-d case.
-    https://github.com/hojonathanho/diffusion/blob/1e0dceb3b3495bbe19116a5e1b3596cd0706c543/diffusion_tf/models/unet.py#L66.
-    """
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
-    def __init__(
-        self,
-        channels,
-        num_heads=1,
-        num_head_channels=-1,
-        # use_new_attention_order=False,
-    ):
-        super().__init__()
-        self.channels = channels
-        if num_head_channels == -1:
-            self.num_heads = num_heads
-        else:
-            assert (
-                channels % num_head_channels == 0
-            ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
-            self.num_heads = channels // num_head_channels
-        self.norm = normalization(channels)
-        self.qkv = nn.Conv1d(channels, channels * 3, 1)
-        self.attention = QKVAttentionLegacy(self.num_heads)
+        # force cast to fp32 to avoid overflowing
+        with torch.autocast(enabled=False, device_type = 'cuda'):
+            q, k = q.float(), k.float()
+            sim = torch.einsum('b i d, b j d -> b i j', q, k) * self.scale
+        
+        del q, k
+    
+        if exists(mask):
+            mask = rearrange(mask, 'b ... -> b (...)')
+            max_neg_value = -torch.finfo(sim.dtype).max
+            mask = repeat(mask, 'b j -> (b h) () j', h=h)
+            sim.masked_fill_(~mask, max_neg_value)
 
-        self.proj_out = zero_module(nn.Conv1d(channels, channels, 1))
+        # attention, what we cannot get enough of
+        sim = sim.softmax(dim=-1)
 
-    def forward(self, x):
-        return self._forward(x)
-        # return torch.utils.checkpoint.checkpoint(self._forward, x)  # pytorch
-        #return pt_checkpoint(self._forward, x)  # pytorch
-
-    def _forward(self, x):
-        b, c, *spatial = x.shape
-        x = x.reshape(b, c, -1)
-        norm = self.norm(x)
-        qkv = self.qkv(norm)
-        h = self.attention(qkv)
-        h = self.proj_out(h)
-        return (x + h).reshape(b, c, *spatial)
+        out = torch.einsum('b i j, b j d -> b i d', sim, v)
+        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        out = self.to_out(out)
+        # print('out.shape: ', out.shape)
+        return out
