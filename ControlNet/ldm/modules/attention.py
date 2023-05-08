@@ -158,18 +158,6 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
-        print('=' * 80)
-        print('query_dim: ', query_dim)
-        print('context_dim: ', context_dim)
-        print('heads: ', heads)
-        print('dim_head: ', dim_head)
-        print('dropout: ', dropout)
-        print('inner_dim: ', inner_dim)
-        print('to_q.weight.shape: ', self.to_q.weight.shape)
-        print('to_k.weight.shape: ', self.to_k.weight.shape)
-        print('to_v.weight.shape: ', self.to_v.weight.shape)
-        print('to_out[0].weight.shape: ', self.to_out[0].weight.shape)
-        print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
 
     def forward(self, x, context=None, mask=None):
         h = self.heads
@@ -182,9 +170,7 @@ class CrossAttention(nn.Module):
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
         # force cast to fp32 to avoid overflowing
-        print('_ATTN_PRECISION: ', _ATTN_PRECISION)
         if _ATTN_PRECISION =="fp32":
-            print('###'*30)
             with torch.autocast(enabled=False, device_type = 'cuda'):
                 q, k = q.float(), k.float()
                 sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
@@ -256,10 +242,11 @@ class MemoryEfficientCrossAttention(nn.Module):
         )
         return self.to_out(out)
 
+from ldm.modules.copied_crossattn import CrossAttention as OurCrossAttention
 
 class BasicTransformerBlock(nn.Module):
     ATTENTION_MODES = {
-        "softmax": CrossAttention,  # vanilla attention
+        "softmax": OurCrossAttention,  # vanilla attention
         "softmax-xformers": MemoryEfficientCrossAttention
     }
     def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True, checkpoint=True,

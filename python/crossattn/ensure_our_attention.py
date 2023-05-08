@@ -1,7 +1,7 @@
 '''
 Ensure our C++ implementation of the attention block is correct.
 '''
-from attentionblock import AttentionBlock
+from python.crossattn.truncated_crossattn import AttentionBlock
 from our_attentionblock import AttentionBlock as OurAttentionBlock
 import torch
 import numpy as np

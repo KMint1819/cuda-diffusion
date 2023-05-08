@@ -1,5 +1,5 @@
 '''
-We refactored the original AttentionBlock from attentionblock_o.py to attentionblock.py.
+We refactored the original CrossAttention from copied_crossattn.py to truncated_crossattn.py.
 This code will verify that the outputs of the two implementations are the same.
 '''
 from crossattn.copied_crossattn import CrossAttention as CopiedCrossAttention
