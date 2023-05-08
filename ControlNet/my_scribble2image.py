@@ -16,7 +16,7 @@ from cldm.model import create_model, load_state_dict
 from cldm.ddim_hacked import DDIMSampler
 
 
-model = create_model('./models/our_cldm_v15.yaml').cpu()
+model = create_model('./models/cldm_v15.yaml').cpu()
 model.load_state_dict(load_state_dict('/home/control_sd15_scribble.pth', location='cuda'))
 model = model.cuda()
 ddim_sampler = DDIMSampler(model)

@@ -74,6 +74,7 @@ class CrossAttention(nn.Module):
             mask = repeat(mask, 'b j -> (b h) () j', h=h)
             sim.masked_fill_(~mask, max_neg_value)
 
+
         # attention, what we cannot get enough of
         sim = sim.softmax(dim=-1)
 

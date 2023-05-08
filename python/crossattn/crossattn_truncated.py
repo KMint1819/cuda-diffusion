@@ -89,17 +89,24 @@ class CrossAttention(nn.Module):
         
         del q, k
     
-        if exists(mask):
-            mask = rearrange(mask, 'b ... -> b (...)')
-            max_neg_value = -torch.finfo(sim.dtype).max
-            mask = repeat(mask, 'b j -> (b h) () j', h=h)
-            sim.masked_fill_(~mask, max_neg_value)
+        # The mask was never specified in the ControlNet
+        # if exists(mask):
+        #     print('mask.shape')
+        #     mask = rearrange(mask, 'b ... -> b (...)')
+        #     max_neg_value = -torch.finfo(sim.dtype).max
+        #     mask = repeat(mask, 'b j -> (b h) () j', h=h)
+        #     sim.masked_fill_(~mask, max_neg_value)
 
         # attention, what we cannot get enough of
         sim = sim.softmax(dim=-1)
 
         out = torch.einsum('b i j, b j d -> b i d', sim, v)
-        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        # change to normal operations
+        # out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        out = out.reshape(1, 8, 4096, 40)
+        out = out.permute(0, 2, 1, 3)
+        out = out.reshape(1, 4096, 320)
+
         out = self.to_out(out)
         # print('out.shape: ', out.shape)
         return out
