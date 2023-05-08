@@ -7,6 +7,7 @@ from crossattn_truncated import CrossAttention as TruncatedCrossAttention
 import torch
 import numpy as np
 from pathlib import Path
+torch.set_printoptions(sci_mode=False)
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)

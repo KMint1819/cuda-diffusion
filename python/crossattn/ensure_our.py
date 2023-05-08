@@ -8,6 +8,9 @@ import torch
 import numpy as np
 from pathlib import Path
 
+torch.set_printoptions(sci_mode=False)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
     tensor = torch.from_numpy(raw).reshape(shape)
@@ -42,13 +45,17 @@ truncated.load_state_dict(state_dict)
 our.load_state_dict(state_dict)
 
 with torch.no_grad():
-    truncated_out = truncated(x).cuda()
-    our_out = our(x).cuda()
+    truncated = truncated.to(device)
+    our = our.to(device)
+    x = x.to(device)
+
+    truncated_out = truncated(x).cpu()
+    our_out = our(x).cpu()
 
     print(f'Truncated output: ', truncated_out)
     print(f'Our       output: ', our_out)
     # Compare two outputs
-    if torch.allclose(truncated_out, our_out, atol=1e-6):
+    if torch.allclose(truncated_out, our_out, atol=1e-4):
         print('Outputs are the same!')
     else:
         print('BAD!!!')

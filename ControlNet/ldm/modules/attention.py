@@ -242,7 +242,8 @@ class MemoryEfficientCrossAttention(nn.Module):
         )
         return self.to_out(out)
 
-from ldm.modules.copied_crossattn import CrossAttention as OurCrossAttention
+# from ldm.modules.crossattn_copied import CrossAttention as CopiedCrossAttention
+from ldm.modules.crossattn_our import CrossAttention as OurCrossAttention
 
 class BasicTransformerBlock(nn.Module):
     ATTENTION_MODES = {

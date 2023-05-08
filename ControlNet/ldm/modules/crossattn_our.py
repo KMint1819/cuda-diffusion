@@ -1,5 +1,5 @@
 '''
-Truncated CrossAttention
+Our CrossAttention
 '''
 import math
 from typing import Any, Mapping
@@ -8,7 +8,7 @@ from torch import nn
 from inspect import isfunction
 from einops import rearrange, repeat
 import os
-from gten import GtenCrossAttention
+import gten
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def exists(val):
@@ -45,14 +45,18 @@ class CrossAttention(nn.Module):
                 'bias': nn.Parameter(torch.Tensor(query_dim))
             })
         )
-        self.backend = GtenCrossAttention(self.query_dim, self.context_dim, self.heads, self.dim_head, self.dropout)
 
     def load_state_dict(self, state_dict, strict=True):
-        self.backend.loadData(self.to_q.weight, 
+        gten.initialize(self.to_q.weight, 
                         self.to_k.weight,
                         self.to_v.weight,
                         self.to_out[0].weight,
-                        self.to_out[0].bias)
+                        self.to_out[0].bias,
+                        self.query_dim,
+                        self.context_dim,
+                        self.heads,
+                        self.dim_head,
+                        self.dropout)
         return super().load_state_dict(state_dict, strict)
 
     # Mask was never specified in ControlNet
@@ -61,4 +65,4 @@ class CrossAttention(nn.Module):
         context = default(context, x)
         x = x.to(device)
         context = context.to(device)
-        return self.backend.compute(x, context)
+        return gten.compute(x, context)

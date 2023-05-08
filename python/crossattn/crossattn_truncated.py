@@ -46,10 +46,17 @@ class CrossAttention(nn.Module):
         # print('to_out[0].weight.shape: ', self.to_out[0].weight.shape)
         # print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
 
+    def rearrange(self, tensor, h):
+        b, n = tensor.shape[:2]
+        d = tensor.shape[-1] // h
+        tensor = tensor.reshape(b, n, h, d)
+        tensor = tensor.permute(0, 2, 1, 3)
+        tensor = tensor.reshape(b * h, n, d)
+        return tensor
+
     def forward(self, x, context=None, mask=None):
         # print('x.shape: ', x.shape)
         context = default(context, x)
-        return context
         h = self.heads
 
         q = self.to_q(x)
@@ -58,30 +65,23 @@ class CrossAttention(nn.Module):
         # print('q: ', q)
         # print('k: ', k)
         # print('v: ', v)
-        print('q.shape: ', q.shape)
-        print('k.shape: ', k.shape)
-        print('v.shape: ', v.shape)
-        print('h: ', h)
+        # print('q.shape: ', q.shape)
+        # print('k.shape: ', k.shape)
+        # print('v.shape: ', v.shape)
+        # print('h: ', h)
 
+        # TODO: make this look better
         # q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
-        q = q.reshape(1, 4096, 8, 40)
-        q = q.permute(0, 2, 1, 3)
-        q = q.reshape(8, 4096, 40)
-
-        v = v.reshape(1, 4096, 8, 40)
-        v = v.permute(0, 2, 1, 3)
-        v = v.reshape(8, 4096, 40)
-
-        k = k.reshape(1, 4096, 8, 40)
-        k = k.permute(0, 2, 1, 3)
-        k = k.reshape(8, 4096, 40)
+        q = self.rearrange(q, h)
+        k = self.rearrange(k, h)
+        v = self.rearrange(v, h)
 
         # print('q: ', q)
         # print('k: ', k)
         # print('v: ', v)
-        print('q.shape: ', q.shape)
-        print('k.shape: ', k.shape)
-        print('v.shape: ', v.shape)
+        # print('q.shape: ', q.shape)
+        # print('k.shape: ', k.shape)
+        # print('v.shape: ', v.shape)
 
         # force cast to fp32 to avoid overflowing
         with torch.autocast(enabled=False, device_type = 'cuda'):
@@ -104,6 +104,7 @@ class CrossAttention(nn.Module):
         out = torch.einsum('b i j, b j d -> b i d', sim, v)
         # change to normal operations
         # out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        
         out = out.reshape(1, 8, 4096, 40)
         out = out.permute(0, 2, 1, 3)
         out = out.reshape(1, 4096, 320)
