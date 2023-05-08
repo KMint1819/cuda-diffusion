@@ -1,19 +1,19 @@
 '''
-This code will verify that the outputs of the two implementations (truncated, ours) are the same.
+We refactored the original CrossAttention from copied_crossattn.py to truncated_crossattn.py.
+This code will verify that the outputs of the two implementations are the same.
 '''
-from crossattn_truncated import CrossAttention as TruncatedCrossAttention
-from crossattn_our import CrossAttention as OurCrossAttention
+from crossattn_truncated import CrossAttention as CrossAttention1
+from crossattn_our     import CrossAttention as CrossAttention2
 import torch
 import numpy as np
 from pathlib import Path
-
 torch.set_printoptions(sci_mode=False)
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
     tensor = torch.from_numpy(raw).reshape(shape)
     return tensor
+
 kwargs = {
     'query_dim': 320,
     'context_dim': 768,
@@ -34,24 +34,30 @@ state_dict = {
     'to_out.0.bias': load_data(data_dir / 'to_out-0-bias.txt', (kwargs['query_dim'],)),
 }
 
-truncated = TruncatedCrossAttention(**kwargs)
-our = OurCrossAttention(**kwargs)
+attn1 = CrossAttention1(**kwargs)
+attn2 = CrossAttention2(**kwargs)
 print('=' * 80)
-for k, v in truncated.state_dict().items():
+for k, v in attn1.state_dict().items():
     print(k, v.shape)
 print('=' * 80)
 
-truncated.load_state_dict(state_dict)
-our.load_state_dict(state_dict)
+attn1.load_state_dict(state_dict)
+attn2.load_state_dict(state_dict)
 
 with torch.no_grad():
-    truncated_out = truncated(x, context)
-    our_out = our(x, context)
+    out1 = attn1(x, context)
+    out1 = attn1(out1, context)
+    out2 = attn2(x, context)
+    out2 = attn2(out2, context)
 
-    print(f'Truncated output: ', truncated_out)
-    print(f'Our       output: ', our_out)
+    print(f'Truncated output: ', out1)
+    print(f'Ours      output: ', out2)
     # Compare two outputs
-    if torch.allclose(truncated_out, our_out, atol=1e-4):
+    if torch.allclose(out1, out2, atol=1e-6):
         print('Outputs are the same!')
     else:
+
+        print('Number difference: ', torch.unique(out1[out1 == out2], return_counts=True))
+        # print('Difference: ', torch.diff(out1, out2))
+        # print('difference: ', torch.max(torch.abs(out1 - out2)))
         print('BAD!!!')

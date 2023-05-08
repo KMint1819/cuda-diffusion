@@ -243,8 +243,8 @@ class MemoryEfficientCrossAttention(nn.Module):
         return self.to_out(out)
 
 # from gten import CopiedCrossAttention as ToggleCrossAttention
-# from gten import TruncatedCrossAttention as ToggleCrossAttention
-from gten import OurCrossAttention as ToggleCrossAttention
+from gten import TruncatedCrossAttention as ToggleCrossAttention
+# from gten import OurCrossAttention as ToggleCrossAttention
 
 class BasicTransformerBlock(nn.Module):
     ATTENTION_MODES = {
