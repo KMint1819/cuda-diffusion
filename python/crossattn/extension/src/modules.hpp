@@ -8,11 +8,15 @@
 namespace gten
 {
 using torch::Tensor;
+namespace CrossAttention
+{
 extern std::unique_ptr<torch::nn::GroupNormImpl> norm_layer;
 extern std::unique_ptr<torch::nn::Conv1dImpl> qkv_layer;
 extern std::unique_ptr<torch::nn::Conv1dImpl> proj_out_layer;
+} // namespace CrossAttention
 void preprocess(Tensor &x)
 {
+
     // do reshape and normalization
     auto shape = x.sizes();
     int b = shape[0];

@@ -54,8 +54,33 @@ class CrossAttention(nn.Module):
         q = self.to_q(x)
         k = self.to_k(context)
         v = self.to_v(context)
+        # print('q: ', q)
+        # print('k: ', k)
+        # print('v: ', v)
+        print('q.shape: ', q.shape)
+        print('k.shape: ', k.shape)
+        print('v.shape: ', v.shape)
+        print('h: ', h)
 
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        # q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        q = q.reshape(1, 4096, 8, 40)
+        q = q.permute(0, 2, 1, 3)
+        q = q.reshape(8, 4096, 40)
+
+        v = v.reshape(1, 4096, 8, 40)
+        v = v.permute(0, 2, 1, 3)
+        v = v.reshape(8, 4096, 40)
+
+        k = k.reshape(1, 4096, 8, 40)
+        k = k.permute(0, 2, 1, 3)
+        k = k.reshape(8, 4096, 40)
+
+        # print('q: ', q)
+        # print('k: ', k)
+        # print('v: ', v)
+        print('q.shape: ', q.shape)
+        print('k.shape: ', k.shape)
+        print('v.shape: ', v.shape)
 
         # force cast to fp32 to avoid overflowing
         with torch.autocast(enabled=False, device_type = 'cuda'):

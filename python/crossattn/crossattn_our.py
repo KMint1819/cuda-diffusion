@@ -7,6 +7,7 @@ from torch import nn
 from inspect import isfunction
 from einops import rearrange, repeat
 import os
+import gten
 
 def exists(val):
     return val is not None
@@ -33,22 +34,11 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
-        # print('=' * 80)
-        # print('query_dim: ', query_dim)
-        # print('context_dim: ', context_dim)
-        # print('heads: ', heads)
-        # print('dim_head: ', dim_head)
-        # print('dropout: ', dropout)
-        # print('inner_dim: ', inner_dim)
-        # print('to_q.weight.shape: ', self.to_q.weight.shape)
-        # print('to_k.weight.shape: ', self.to_k.weight.shape)
-        # print('to_v.weight.shape: ', self.to_v.weight.shape)
-        # print('to_out[0].weight.shape: ', self.to_out[0].weight.shape)
-        # print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
 
     def forward(self, x, context=None, mask=None):
         # print('x.shape: ', x.shape)
         context = default(context, x)
+        out = gten.compute(x, context, mask)
         h = self.heads
 
         q = self.to_q(x)
