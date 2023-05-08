@@ -5,7 +5,7 @@
 #include <torch/extension.h>
 #include <vector>
 
-namespace torda
+namespace gten
 {
 using torch::Tensor;
 extern std::unique_ptr<torch::nn::GroupNormImpl> norm_layer;
@@ -74,4 +74,4 @@ Tensor postprocess(const Tensor &x, const Tensor &h, torch::IntArrayRef shape)
     return (x + h).reshape(shape);
 }
 
-} // namespace torda
+} // namespace gten

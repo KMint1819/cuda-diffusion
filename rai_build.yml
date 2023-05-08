@@ -11,12 +11,12 @@ resources:
 commands:
   build:
     # Do not remove the first line as it will remove the build folders from the source directory
-    # - /bin/sh -c 'cd /src/python/extension && rm -r build/ dist/ torda*'
+    # - /bin/sh -c 'cd /src/python/extension && rm -r build/ dist/ gten*'
     # - /bin/sh -c 'python3.8 setup.py install'
     # - /bin/sh -c 'cd /src/python/extension && python3.8 -m pip install ./'
     # - ls /usr/lib/python3.8/dist-packages
     # - /bin/sh -c 'python3.8 -c "import site; print(site.getsitepackages())"'
-    # - /bin/sh -c 'python3.8 -c "import torch; import torda; torda.hello()"'
+    # - /bin/sh -c 'python3.8 -c "import torch; import gten; gten.hello()"'
     - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
 
     # Below is for C++ profiling

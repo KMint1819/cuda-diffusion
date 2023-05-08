@@ -8,8 +8,8 @@
 2. How to use the library
 ```bash
 import torch # Must import torch first!
-import torda # Our built target name
+import gten # Our built target name
 
 # Use the library 
-print(torda.hello('ECE508 group ten'))
+print(gten.hello('ECE508 group ten'))
 ```

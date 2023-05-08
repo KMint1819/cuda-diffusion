@@ -2,8 +2,8 @@
 We refactored the original CrossAttention from copied_crossattn.py to truncated_crossattn.py.
 This code will verify that the outputs of the two implementations are the same.
 '''
-from copied_crossattn import CrossAttention as CopiedCrossAttention
-from truncated_crossattn import CrossAttention as TruncatedCrossAttention
+from crossattn_copied import CrossAttention as CopiedCrossAttention
+from crossattn_truncated import CrossAttention as TruncatedCrossAttention
 import torch
 import numpy as np
 from pathlib import Path

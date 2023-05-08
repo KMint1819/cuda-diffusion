@@ -8,7 +8,7 @@
 #include <torch/extension.h>
 #include <vector>
 
-namespace torda
+namespace gten
 {
 std::string hello(const std::string &name)
 {
@@ -40,28 +40,28 @@ Tensor compute(Tensor x, int n_channels, int n_heads)
     printf("Computing...\n");
     x = x.cuda();
     auto original_shape = x.sizes();
-    torda::preprocess(x);
+    gten::preprocess(x);
 
-    Tensor tensor = torda::normalize(x);
-    tensor = torda::qkv(tensor);
-    tensor = torda::attention(tensor, n_heads);
-    tensor = torda::proj_out(tensor);
-    return torda::postprocess(x, tensor, torch::IntArrayRef(original_shape));
+    Tensor tensor = gten::normalize(x);
+    tensor = gten::qkv(tensor);
+    tensor = gten::attention(tensor, n_heads);
+    tensor = gten::proj_out(tensor);
+    return gten::postprocess(x, tensor, torch::IntArrayRef(original_shape));
 }
 
-} // namespace torda
+} // namespace gten
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
-    m.def("hello", &torda::hello, "Say hello from C++!");
-    m.def("initialize", &torda::initialize, "Initialize the model");
-    m.def("compute", &torda::compute, "Initialize the model");
+    m.def("hello", &gten::hello, "Say hello from C++!");
+    m.def("initialize", &gten::initialize, "Initialize the model");
+    m.def("compute", &gten::compute, "Initialize the model");
 
     // modules.hpp
-    m.def("preprocess", &torda::preprocess, "Preprocess the data");
-    m.def("normalize", &torda::normalize, "Normalize the data");
-    m.def("qkv", &torda::qkv, "Run qkv forward pass");
-    m.def("attention", &torda::attention, "Run attention forward pass");
-    m.def("proj_out", &torda::proj_out, "Run proj_out(feed forward) forward pass");
-    m.def("postprocess", &torda::postprocess, "Postprocess the data");
+    m.def("preprocess", &gten::preprocess, "Preprocess the data");
+    m.def("normalize", &gten::normalize, "Normalize the data");
+    m.def("qkv", &gten::qkv, "Run qkv forward pass");
+    m.def("attention", &gten::attention, "Run attention forward pass");
+    m.def("proj_out", &gten::proj_out, "Run proj_out(feed forward) forward pass");
+    m.def("postprocess", &gten::postprocess, "Postprocess the data");
 }

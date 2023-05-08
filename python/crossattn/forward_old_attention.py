@@ -1,4 +1,4 @@
-from python.crossattn.truncated_crossattn import AttentionBlock
+from python.crossattn.crossattn_truncated import AttentionBlock
 import time
 import torch
 from torch import nn

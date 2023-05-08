@@ -17,7 +17,7 @@ x.shape:  torch.Size([1, 4096, 320])
 out.shape:  torch.Size([1, 4096, 320])
 '''
 
-from copied_crossattn import CrossAttention
+from python.crossattn.crossattn_copied import CrossAttention
 import torch
 import numpy as np
 
