@@ -4,7 +4,6 @@
     cd python/extension
     pip install ./
     ```
-    - You might have to remove the generated folders if you want to rebuild
 2. How to use the library
 ```bash
 import torch # Must import torch first!
