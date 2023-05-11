@@ -114,7 +114,7 @@ Tensor CrossAttention::compute(Tensor x, Tensor context)
     out = out.permute({0, 2, 1, 3});
     out = out.reshape({b, n, h * d});
 
-    out = _layer_to_out_0->forward(x);
+    out = _layer_to_out_0->forward(out);
     out = _layer_to_out_1->forward(out);
     return out;
 }

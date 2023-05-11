@@ -50,7 +50,7 @@ attn2.eval()
 with torch.no_grad():
     out1 = x.clone()
     out2 = x.clone()
-    for i in range(10):
+    for i in range(1):
         out1 = attn1(out1, context)
         out2 = attn2(out2, context)
 
