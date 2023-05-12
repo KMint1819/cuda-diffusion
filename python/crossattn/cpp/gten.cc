@@ -25,15 +25,24 @@ CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int di
     to_k_option.bias(false);
     torch::nn::LinearOptions to_v_option(context_dim, inner_dim);
     to_v_option.bias(false);
-    torch::nn::LinearOptions to_out_0_option(inner_dim, query_dim);
-    to_out_0_option.bias(true);
 
     _layer_to_q = std::make_unique<torch::nn::LinearImpl>(to_q_option);
     _layer_to_k = std::make_unique<torch::nn::LinearImpl>(to_k_option);
     _layer_to_v = std::make_unique<torch::nn::LinearImpl>(to_v_option);
-    _layer_to_out_0 = std::make_unique<torch::nn::LinearImpl>(to_out_0_option);
+    _layer_to_out_0 = std::make_unique<torch::nn::LinearImpl>(inner_dim, query_dim);
     _layer_to_out_1 = std::make_unique<torch::nn::DropoutImpl>(dropout);
 
+    _layer_to_q->weight.set_requires_grad(false);
+    _layer_to_k->weight.set_requires_grad(false);
+    _layer_to_v->weight.set_requires_grad(false);
+    _layer_to_out_0->weight.set_requires_grad(false);
+    _layer_to_out_0->bias.set_requires_grad(false);
+
+    _layer_to_q->eval();
+    _layer_to_k->eval();
+    _layer_to_v->eval();
+    _layer_to_out_0->eval();
+    _layer_to_out_1->eval();
     // print params
     // printf("=========================================\n");
     // printf("Torch version: %d.%d.%d\n", TORCH_VERSION_MAJOR, TORCH_VERSION_MINOR, TORCH_VERSION_PATCH);
@@ -51,18 +60,11 @@ void CrossAttention::initialize(Tensor to_q_weight, Tensor to_k_weight, Tensor t
                                 Tensor to_out_0_bias)
 {
     printf("Initializing gten data...\n");
-    // Transfer to gpu
-    _layer_to_q->weight = to_q_weight;
-    _layer_to_k->weight = to_k_weight;
-    _layer_to_v->weight = to_v_weight;
-    _layer_to_out_0->weight = to_out_0_weight;
-    _layer_to_out_0->bias = to_out_0_bias;
-
-    _layer_to_q->eval();
-    _layer_to_k->eval();
-    _layer_to_v->eval();
-    _layer_to_out_0->eval();
-    _layer_to_out_1->eval();
+    _layer_to_q->weight = std::move(to_q_weight);
+    _layer_to_k->weight = std::move(to_k_weight);
+    _layer_to_v->weight = std::move(to_v_weight);
+    _layer_to_out_0->weight = std::move(to_out_0_weight);
+    _layer_to_out_0->bias = std::move(to_out_0_bias);
     printf("Gten data is initialized!\n");
 }
 
