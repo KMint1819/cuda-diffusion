@@ -6,3 +6,4 @@ dist/
 *.egg-info/
 *.pdf
 *.deb
+out/
