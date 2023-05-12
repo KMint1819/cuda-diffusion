@@ -47,21 +47,23 @@ CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int di
 }
 
 // TODO: Load state dict instead of parameters
-void CrossAttention::loadData(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tensor to_out_0_weight,
-                              Tensor to_out_0_bias)
+void CrossAttention::initialize(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tensor to_out_0_weight,
+                                Tensor to_out_0_bias)
 {
-    printf("Type of to_q_weight: %s\n", to_q_weight.dtype().name());
-    printf("Type of to_k_weight: %s\n", to_k_weight.dtype().name());
-    printf("Type of to_v_weight: %s\n", to_v_weight.dtype().name());
-    printf("Type of to_out_0_weight: %s\n", to_out_0_weight.dtype().name());
-    printf("Type of to_out_0_bias: %s\n", to_out_0_bias.dtype().name());
-
+    printf("Initializing gten data...\n");
     // Transfer to gpu
     _layer_to_q->weight = to_q_weight;
     _layer_to_k->weight = to_k_weight;
     _layer_to_v->weight = to_v_weight;
     _layer_to_out_0->weight = to_out_0_weight;
     _layer_to_out_0->bias = to_out_0_bias;
+
+    _layer_to_q->eval();
+    _layer_to_k->eval();
+    _layer_to_v->eval();
+    _layer_to_out_0->eval();
+    _layer_to_out_1->eval();
+    printf("Gten data is initialized!\n");
 }
 
 void CrossAttention::to(torch::Device device)
@@ -85,19 +87,11 @@ Tensor CrossAttention::rearrange(Tensor tensor, int h) const
     return tensor;
 }
 
-Tensor CrossAttention::compute(Tensor x, Tensor context, Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight,
-                               Tensor to_out_0_weight, Tensor to_out_0_bias)
+Tensor CrossAttention::compute(Tensor x, Tensor context)
 {
-    loadData(to_q_weight, to_k_weight, to_v_weight, to_out_0_weight, to_out_0_bias);
-    printf("Data is loaded!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-    _layer_to_q->eval();
-    _layer_to_k->eval();
-    _layer_to_v->eval();
-    _layer_to_out_0->eval();
-    _layer_to_out_1->eval();
     torch::NoGradGuard nograd;
 
-    printf("Computing...\n");
+    // printf("Computing...\n");
     if (_device == torch::kCPU)
         _device = torch::kCUDA;
     to(_device);
@@ -138,6 +132,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     py::class_<gten::CrossAttention>(m, "GtenCrossAttention")
         .def(py::init<int, int, int, int, double>(), py::arg("query_dim"), py::arg("context_dim"), py::arg("heads"),
              py::arg("dim_head"), py::arg("dropout"))
+        .def("initialize", &gten::CrossAttention::initialize, "Initialize the class with parameters")
         .def("compute", &gten::CrossAttention::compute, "Initialize the model")
         .def("to", &gten::CrossAttention::to, "Move the model to device");
 }

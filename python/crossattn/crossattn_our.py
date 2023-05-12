@@ -30,7 +30,10 @@ class CrossAttention(nn.Module):
         self.heads = heads
         self.dim_head = dim_head
         self.dropout = dropout
+        self.is_backend_initialized = False
 
+        # Although not used, these are required to successfully read data from model.load_state_dict 
+        # Will be deleted after the backend is initialized
         self.to_q = nn.ParameterDict({
             'weight': nn.Parameter(torch.Tensor(inner_dim, query_dim))
         })
@@ -64,4 +67,12 @@ class CrossAttention(nn.Module):
     # Mask was never specified in ControlNet
     def forward(self, x, context=None, mask=None):
         context = default(context, x)
-        return self.backend.compute(x, context, self.to_q.weight, self.to_k.weight, self.to_v.weight, self.to_out[0].weight, self.to_out[0].bias)
+        if not self.is_backend_initialized:
+            self.backend.initialize(self.to_q.weight, self.to_k.weight, self.to_v.weight, self.to_out[0].weight, self.to_out[0].bias)
+            self.is_backend_initialized = True
+            del self.to_q
+            del self.to_k
+            del self.to_v
+            del self.to_out
+
+        return self.backend.compute(x, context)

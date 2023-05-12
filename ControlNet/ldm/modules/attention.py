@@ -275,18 +275,6 @@ class BasicTransformerBlock(nn.Module):
 
     def _forward(self, x, context=None):
         x = self.attn1(self.norm1(x), context=context if self.disable_self_attn else None) + x
-
-        ### GTEN
-        # data_dir = Path('/build')
-        # idx = 0
-        # prefix = 'out'
-        # while (data_dir / f'{prefix}{idx}.pt').exists():
-        #     idx += 1
-        # torch.save(x, data_dir / f'{prefix}{idx}.pt')
-
-        ###
-
-
         x = self.attn2(self.norm2(x), context=context) + x
         x = self.ff(self.norm3(x)) + x
         return x

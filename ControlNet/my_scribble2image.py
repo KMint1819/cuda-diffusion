@@ -70,7 +70,7 @@ def main(args):
     n_prompt = 'longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality'
     num_samples = 1
     image_resolution = 512
-    ddim_steps = 10
+    ddim_steps = 20
     guess_mode = False
     strength = 1.0
     scale = 9.0
