@@ -9,6 +9,7 @@ import numpy as np
 from pathlib import Path
 torch.set_printoptions(sci_mode=False)
 tolerance = 1e-6
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
@@ -45,8 +46,10 @@ print('=' * 80)
 attn1.load_state_dict(state_dict)
 attn2.load_state_dict(state_dict)
 
-attn1.eval()
-attn2.eval()
+attn1 = attn1.eval().to(device)
+attn2 = attn2.eval().to(device)
+x = x.to(device)
+context = context.to(device)
 with torch.no_grad():
     out1 = x.clone()
     out2 = x.clone()

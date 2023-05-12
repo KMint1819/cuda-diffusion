@@ -33,13 +33,13 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
-        print('\n', '=' * 80)
-        print('query_dim: ', query_dim)
-        print('context_dim: ', context_dim)
-        print('heads: ', heads)
-        print('dim_head: ', dim_head)
-        print('dropout: ', dropout)
-        print('inner_dim: ', inner_dim)
+        # print('\n', '=' * 80)
+        # print('query_dim: ', query_dim)
+        # print('context_dim: ', context_dim)
+        # print('heads: ', heads)
+        # print('dim_head: ', dim_head)
+        # print('dropout: ', dropout)
+        # print('inner_dim: ', inner_dim)
 
     def rearrange(self, tensor, h):
         b, n = tensor.shape[:2]

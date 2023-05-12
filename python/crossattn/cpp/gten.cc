@@ -25,28 +25,37 @@ CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int di
     to_k_option.bias(false);
     torch::nn::LinearOptions to_v_option(context_dim, inner_dim);
     to_v_option.bias(false);
+    torch::nn::LinearOptions to_out_0_option(inner_dim, query_dim);
+    to_out_0_option.bias(true);
 
     _layer_to_q = std::make_unique<torch::nn::LinearImpl>(to_q_option);
     _layer_to_k = std::make_unique<torch::nn::LinearImpl>(to_k_option);
     _layer_to_v = std::make_unique<torch::nn::LinearImpl>(to_v_option);
-    _layer_to_out_0 = std::make_unique<torch::nn::LinearImpl>(inner_dim, query_dim);
+    _layer_to_out_0 = std::make_unique<torch::nn::LinearImpl>(to_out_0_option);
     _layer_to_out_1 = std::make_unique<torch::nn::DropoutImpl>(dropout);
 
     // print params
-    printf("=========================================\n");
-    printf("query_dim: %d\n", query_dim);
-    printf("context_dim: %d\n", context_dim);
-    printf("heads: %d\n", heads);
-    printf("dim_head: %d\n", dim_head);
-    printf("dropout: %f\n", dropout);
-    printf("inner_dim: %d\n", inner_dim);
-    printf("=========================================\n");
+    // printf("=========================================\n");
+    // printf("Torch version: %d.%d.%d\n", TORCH_VERSION_MAJOR, TORCH_VERSION_MINOR, TORCH_VERSION_PATCH);
+    // printf("query_dim: %d\n", query_dim);
+    // printf("context_dim: %d\n", context_dim);
+    // printf("heads: %d\n", heads);
+    // printf("dim_head: %d\n", dim_head);
+    // printf("dropout: %f\n", dropout);
+    // printf("inner_dim: %d\n", inner_dim);
+    // printf("=========================================\n");
 }
 
 // TODO: Load state dict instead of parameters
 void CrossAttention::loadData(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tensor to_out_0_weight,
                               Tensor to_out_0_bias)
 {
+    printf("Type of to_q_weight: %s\n", to_q_weight.dtype().name());
+    printf("Type of to_k_weight: %s\n", to_k_weight.dtype().name());
+    printf("Type of to_v_weight: %s\n", to_v_weight.dtype().name());
+    printf("Type of to_out_0_weight: %s\n", to_out_0_weight.dtype().name());
+    printf("Type of to_out_0_bias: %s\n", to_out_0_bias.dtype().name());
+
     // Transfer to gpu
     _layer_to_q->weight = to_q_weight;
     _layer_to_k->weight = to_k_weight;
@@ -76,8 +85,11 @@ Tensor CrossAttention::rearrange(Tensor tensor, int h) const
     return tensor;
 }
 
-Tensor CrossAttention::compute(Tensor x, Tensor context)
+Tensor CrossAttention::compute(Tensor x, Tensor context, Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight,
+                               Tensor to_out_0_weight, Tensor to_out_0_bias)
 {
+    loadData(to_q_weight, to_k_weight, to_v_weight, to_out_0_weight, to_out_0_bias);
+    printf("Data is loaded!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     _layer_to_q->eval();
     _layer_to_k->eval();
     _layer_to_v->eval();
@@ -108,11 +120,11 @@ Tensor CrossAttention::compute(Tensor x, Tensor context)
     sim = sim.softmax(-1);
     Tensor out = torch::einsum("b i j, b j d -> b i d", {sim, v});
 
-    // TODO: solve segfault
     // out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
     out = out.reshape({b, h, n, d});
     out = out.permute({0, 2, 1, 3});
     out = out.reshape({b, n, h * d});
+    // Output above this line is correct
 
     out = _layer_to_out_0->forward(out);
     out = _layer_to_out_1->forward(out);
@@ -126,7 +138,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     py::class_<gten::CrossAttention>(m, "GtenCrossAttention")
         .def(py::init<int, int, int, int, double>(), py::arg("query_dim"), py::arg("context_dim"), py::arg("heads"),
              py::arg("dim_head"), py::arg("dropout"))
-        .def("loadData", &gten::CrossAttention::loadData, "Initialize the model")
         .def("compute", &gten::CrossAttention::compute, "Initialize the model")
         .def("to", &gten::CrossAttention::to, "Move the model to device");
 }

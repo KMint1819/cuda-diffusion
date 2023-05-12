@@ -46,29 +46,22 @@ class CrossAttention(nn.Module):
                 'bias': nn.Parameter(torch.Tensor(query_dim))
             })
         )
-        print('\n\n', "#" * 80)
-        print("query_dim: ", query_dim)
-        print("context_dim: ", context_dim)
-        print("heads: ", heads)
-        print("dim_head: ", dim_head)
-        print("dropout: ", dropout)
-        print("inner_dim: ", inner_dim)
-        print("#" * 80)
+        # print('\n\n', "#" * 80)
+        # print("query_dim: ", query_dim)
+        # print("context_dim: ", context_dim)
+        # print("heads: ", heads)
+        # print("dim_head: ", dim_head)
+        # print("dropout: ", dropout)
+        # print("inner_dim: ", inner_dim)
+        # print("#" * 80)
         self.backend = GtenCrossAttention(self.query_dim, self.context_dim, self.heads, self.dim_head, self.dropout)
 
-    def load_state_dict(self, state_dict, strict=True):
-        self.backend.loadData(self.to_q.weight, 
-                        self.to_k.weight,
-                        self.to_v.weight,
-                        self.to_out[0].weight,
-                        self.to_out[0].bias)
-        return super().load_state_dict(state_dict, strict)
-
     def to(self, device):
+        super().to(device)
         self.backend.to(device)
-        return super().to(device)
+        return self
 
     # Mask was never specified in ControlNet
     def forward(self, x, context=None, mask=None):
         context = default(context, x)
-        return self.backend.compute(x, context)
+        return self.backend.compute(x, context, self.to_q.weight, self.to_k.weight, self.to_v.weight, self.to_out[0].weight, self.to_out[0].bias)
