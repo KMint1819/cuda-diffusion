@@ -30,9 +30,9 @@ rai -p .
 /d/uiuc/508/cuda-diffusion/github/turtle_scribble.png
 ```
 - Input image:
-![turtle_scribble](github/turtle_scribble.png)
+    - ![turtle_scribble](github/turtle_scribble.png)
 - Output image:
-![turtle_image](github/turtle_image.png)
+    - ![turtle_image](github/turtle_image.png)
 
 
 ## How to configure rai build commands
