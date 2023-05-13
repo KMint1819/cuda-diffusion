@@ -1,4 +1,5 @@
 #include "gten.hpp"
+#include "gten_cuda.cuh"
 #include <iostream>
 #include <memory>
 #include <pybind11/chrono.h>
@@ -94,7 +95,9 @@ Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
     to(_device);
 
     int h = _heads;
-    Tensor q = _layer_to_q->forward(x);
+    Tensor q = basic_linear(x, _layer_to_q->weight, torch::empty({0}));
+    return q;
+    // Tensor q = _layer_to_q->forward(x);
     Tensor k = _layer_to_k->forward(context);
     Tensor v = _layer_to_v->forward(context);
 

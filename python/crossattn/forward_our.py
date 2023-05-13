@@ -6,7 +6,6 @@ TODO: WARNING:
 The crossattn_our/CrossAttention somehow cannot pass this test even though the result of plugging
 back into ControlNet is fine.
 '''
-from crossattn_truncated import CrossAttention as CrossAttention1
 from crossattn_our import CrossAttention as CrossAttention2
 import torch
 import numpy as np
@@ -41,42 +40,21 @@ state_dict = {
     'to_out.0.bias': load_data(data_dir / 'to_out-0-bias.txt', (kwargs['query_dim'],)),
 }
 
-attn1 = CrossAttention1(**kwargs)
-attn2 = CrossAttention2(**kwargs)
+attn = CrossAttention2(**kwargs)
 print('=' * 80)
-for k, v in attn1.state_dict().items():
+for k, v in attn.state_dict().items():
     print(k, v.shape)
 print('=' * 80)
 
-attn1.load_state_dict(state_dict)
-attn2.load_state_dict(state_dict)
+attn.load_state_dict(state_dict)
 
-attn1 = attn1.eval().to(device)
-attn2 = attn2.eval().to(device)
+attn = attn.eval().to(device)
 x = x.to(device)
 context = context.to(device)
 with torch.no_grad():
-    out1 = x.clone()
-    out2 = x.clone()
+    out = x.clone()
     for i in range(1):
-        out1 = attn1(out1, context)
-        # torch.cuda.synchronize()
-        out2 = attn2(out2, context)
+        out = attn(out, context)
         # torch.cuda.synchronize()
 
-    print(f'Truncated output: ', out1)
-    print(f'Ours      output: ', out2)
-    # Compare two outputs
-    # out1 = out1.to('cpu')
-    # out2 = out2.to('cpu')
-    
-    if torch.allclose(out1, out2, atol=tolerance):
-        print('Outputs are the same for the tolerance of ', tolerance)
-    else:
-        diffs = torch.argwhere((out1 - out2) > tolerance)
-        print(f'Number of different elements: {diffs.shape}/{torch.numel(out1)}')
-        print('diff shape: ', diffs.shape)
-        print('out shape: ', out1.shape)
-        for i, diff in enumerate(diffs[:10]):
-            print(f'difference {i}: {out1[diff[0], diff[1], diff[2]]}, {out2[diff[0], diff[1], diff[2]]}')
-        print('BAD!!!')
+    print(f'output: ', out)
