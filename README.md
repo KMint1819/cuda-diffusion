@@ -26,8 +26,6 @@ expensive off-chip DRAM accesses.
 - This project can only be run using `rai`, a tool from UIUC to run on cloud servers.
 ```
 rai -p .
-/d/uiuc/508/cuda-diffusion/github/turtle_image.png
-/d/uiuc/508/cuda-diffusion/github/turtle_scribble.png
 ```
 - Input image:
     - ![turtle_scribble](github/turtle_scribble.png)
