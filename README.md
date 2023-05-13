@@ -26,7 +26,14 @@ expensive off-chip DRAM accesses.
 - This project can only be run using `rai`, a tool from UIUC to run on cloud servers.
 ```
 rai -p .
+/d/uiuc/508/cuda-diffusion/github/turtle_image.png
+/d/uiuc/508/cuda-diffusion/github/turtle_scribble.png
 ```
+- Input image:
+![turtle_scribble](github/turtle_scribble.png)
+- Output image:
+![turtle_image](github/turtle_image.png)
+
 
 ## How to configure rai build commands
 - Run controlnet with out attentionblock implementation
@@ -34,8 +41,7 @@ rai -p .
 ...
 commands:
   build:
-    - /bin/sh -c 'cd /src/python/extension && rm -r build/ dist/ gten*'
-    - /bin/sh -c 'cd /src/python/extension && python3.8 -m pip install ./'
+    - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
     - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
 ```
 

@@ -4,15 +4,17 @@ Source: https://pytorch.org/tutorials/advanced/cpp_extension.html
 ## Get started
 1. Build the extension
     ```bash
-    cd python/extension
-    python setup.py install
+    cd python/
+    python -m pip install ./
     ```
-    - The `setup.py` file simply builds the extension in the current directory.
+    - The `python/setup.py` file simply builds the extension in the current directory.
     - What could be set in `setup.py`:
         - module name
         - Cpp source files
+        - our additional python modules
 2. Run an example code
     ```bash
-    python play_extension.py
+    cd crossattn/
+    python ensure_our.py
     ```
-    - In `play_extension.py`, we import our built extension and call it from the python side.
+    - In `ensure_our.py`, we take the result from our c++ extension and compare with the correct answer

@@ -1,7 +1,7 @@
 # Connecting pytorch and C++
 1. Build the library
     ```bash
-    cd python/extension
+    cd python/
     pip install ./
     ```
 2. How to use the library
