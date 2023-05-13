@@ -28,4 +28,5 @@ class CrossAttention
     const double _scale;
     torch::Device _device = torch::kCPU;
 };
+std::string hello(const std::string &name);
 } // namespace gten
