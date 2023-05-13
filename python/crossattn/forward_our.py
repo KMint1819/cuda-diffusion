@@ -13,7 +13,6 @@ from pathlib import Path
 torch.set_printoptions(sci_mode=False)
 tolerance = 1e-4
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# torch.cuda.set_device(0)
 
 def load_data(p, shape):
     raw = np.loadtxt(p, dtype=np.float32)
@@ -58,3 +57,4 @@ with torch.no_grad():
         # torch.cuda.synchronize()
 
     print(f'output: ', out)
+    print(f'sum: ', out.sum())

@@ -7,23 +7,20 @@
 __global__ void basic_linear_kernel(const float *input, const float *weight, const float *bias, float *out, int nr,
                                     int nk, int nc, bool has_bias)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    int j = blockIdx.y * blockDim.y + threadIdx.y;
-    printf("i: %d, j: %d, nr: %d, nc: %d, nk: %d\n", i, j, nr, nc, nk);
-    if (i < nr && j < nc)
+    int r = blockIdx.y * blockDim.y + threadIdx.y;
+    int c = blockIdx.x * blockDim.x + threadIdx.x;
+    if (r < nr && c < nc)
     {
         float sum = 0.;
         for (int k = 0; k < nk; k++)
         {
-            sum += input[i * nk + k] * weight[k * nc + j];
+            sum += input[r * nk + k] * weight[k * nc + c];
         }
         if (has_bias)
-            sum += bias[j];
-        if (i * nc + j < nr * nc)
         {
-            out[i * nc + j] = sum;
-            printf("out[%d, %d] = %f\n", i, j, out[i * nc + j]);
+            sum += bias[c];
         }
+        out[r * nc + c] = sum;
     }
 }
 
@@ -56,12 +53,12 @@ Tensor basic_linear(Tensor input, Tensor weight, Tensor bias)
     std::cout << bias.sizes() << std::endl;
     printf("nr: %d, nk: %d, nc: %d\n", nr, nk, nc);
 
-    int blockWidth = 32;
-    dim3 grid(ceil(1.0 * nr / blockWidth), ceil(1.0 * nc / blockWidth));
-    dim3 block(32, 32);
+    int block_width = 32;
+    dim3 grid(ceil(1.0 * nc / block_width), ceil(1.0 * nr / block_width));
+    dim3 block(block_width, block_width);
     bool has_bias = bias.numel() > 0;
 
-    Tensor out = torch::zeros({1, nr, nc}, torch::kFloat32);
+    Tensor out = torch::ones({1, nr, nc}, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
     basic_linear_kernel<<<grid, block>>>(input.data_ptr<float>(), weight.data_ptr<float>(), bias.data_ptr<float>(),
                                          out.data_ptr<float>(), nr, nk, nc, has_bias);
     cudaDeviceSynchronize();
