@@ -49,9 +49,9 @@ Tensor basic_linear(Tensor input, Tensor weight, Tensor bias) {
     // std::cout << bias.sizes() << std::endl;
     // printf("nr: %d, nk: %d, nc: %d\n", nr, nk, nc);
 
-    int blockWidth = 32;
-    dim3 grid(ceil(1.0 * nc / blockWidth), ceil(1.0 * nr / blockWidth));
-    dim3 block(32, 32);
+    int block_width = 32;
+    dim3 grid(ceil(1.0 * nc / block_width), ceil(1.0 * nr / block_width));
+    dim3 block(block_width, block_width);
     bool has_bias = bias.numel() > 0;
     // printf("has_bias: %d\n\n\n", has_bias);
 
