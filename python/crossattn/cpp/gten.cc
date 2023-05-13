@@ -95,18 +95,27 @@ Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
     to(_device);
 
     int h = _heads;
-    printf("x.shape: ");
-    std::cout << x.sizes() << std::endl;
-    printf("layerq shape: ");
-    std::cout << _layer_to_q->weight.sizes() << std::endl;
-    printf("layer out shape: \n");
-    std::cout << _layer_to_out_0->weight.sizes() << std::endl;
-    std::cout << _layer_to_out_0->bias.sizes() << std::endl;
-    Tensor q = basic_linear(x, _layer_to_q->weight, torch::empty({0}));
-    return q;
+    // printf("input shape: ");
+    // std::cout << x.sizes() << std::endl;
+    // printf("context .shape: ");
+    // std::cout << context.sizes() << std::endl;
+    // printf("q weight shape: ");
+    // std::cout << _layer_to_q->weight.sizes() << std::endl;
+    // printf("k weight shape: ");
+    // std::cout << _layer_to_k->weight.sizes() << std::endl;
+    // printf("v weight shape: ");
+    // std::cout << _layer_to_v->weight.sizes() << std::endl;
+    // printf("out shape: \n");
+    // std::cout << _layer_to_out_0->weight.sizes() << std::endl;
+    // std::cout << _layer_to_out_0->bias.sizes() << std::endl;
+
     // Tensor q = _layer_to_q->forward(x);
-    Tensor k = _layer_to_k->forward(context);
-    Tensor v = _layer_to_v->forward(context);
+    // Tensor k = _layer_to_k->forward(context);
+    // Tensor v = _layer_to_v->forward(context);
+    
+    Tensor q = basic_linear(x, _layer_to_q->weight, torch::empty({0}));
+    Tensor k = basic_linear(context, _layer_to_k->weight, torch::empty({0}));
+    Tensor v = basic_linear(context, _layer_to_v->weight, torch::empty({0}));
 
     int b = q.size(0);
     int n = q.size(1);
@@ -127,8 +136,12 @@ Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
     out = out.permute({0, 2, 1, 3});
     out = out.reshape({b, n, h * d});
 
-    out = _layer_to_out_0->forward(out);
-    out = _layer_to_out_1->forward(out);
+    out = basic_linear(out, _layer_to_out_0->weight, _layer_to_out_0->bias);
+    // out = _layer_to_out_0->forward(out);
+    // std::cout << out[0][0] << "," << out_our[0][0] << std::endl;
+    // std::cout << _layer_to_out_0->bias[0] << std::endl;
+    // out = _layer_to_out_1->forward(out);
+
     return out;
 }
 std::string hello(const std::string &name)

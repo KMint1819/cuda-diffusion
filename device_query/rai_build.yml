@@ -1,0 +1,15 @@
+# lab: Device Query
+rai:
+  version: 0.2
+  image: kmint1819/gten:rai4
+resources:
+  cpu:
+    architecture: amd64
+  gpu:
+    count: 1
+commands:
+  build:
+    - cp -r /src .
+    - cmake /src
+    - make
+    - ./devicequery
