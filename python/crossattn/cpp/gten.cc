@@ -10,10 +10,6 @@
 
 namespace gten
 {
-std::string hello(const std::string &name)
-{
-    return "Saying hello to " + name + " from C++!";
-}
 
 CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int dim_head, double dropout)
     : _heads(heads), _scale(std::pow(dim_head, -0.5))
@@ -59,13 +55,11 @@ CrossAttention::CrossAttention(int query_dim, int context_dim, int heads, int di
 void CrossAttention::initialize(Tensor to_q_weight, Tensor to_k_weight, Tensor to_v_weight, Tensor to_out_0_weight,
                                 Tensor to_out_0_bias)
 {
-    printf("Initializing gten data...\n");
     _layer_to_q->weight = std::move(to_q_weight);
     _layer_to_k->weight = std::move(to_k_weight);
     _layer_to_v->weight = std::move(to_v_weight);
     _layer_to_out_0->weight = std::move(to_out_0_weight);
     _layer_to_out_0->bias = std::move(to_out_0_bias);
-    printf("Gten data is initialized!\n");
 }
 
 void CrossAttention::to(torch::Device device)
@@ -78,7 +72,8 @@ void CrossAttention::to(torch::Device device)
     _layer_to_out_1->to(device);
 }
 
-Tensor CrossAttention::rearrange(Tensor tensor, int h) const
+// CAUTION: This function modifies the input tensor
+Tensor CrossAttention::rearrange(Tensor &tensor, int h) const
 {
     int b = tensor.size(0);
     int n = tensor.size(1);
@@ -89,7 +84,7 @@ Tensor CrossAttention::rearrange(Tensor tensor, int h) const
     return tensor;
 }
 
-Tensor CrossAttention::compute(Tensor x, Tensor context)
+Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
 {
     torch::NoGradGuard nograd;
 
@@ -102,6 +97,7 @@ Tensor CrossAttention::compute(Tensor x, Tensor context)
     Tensor q = _layer_to_q->forward(x);
     Tensor k = _layer_to_k->forward(context);
     Tensor v = _layer_to_v->forward(context);
+
     int b = q.size(0);
     int n = q.size(1);
     int d = q.size(2) / h;
@@ -120,11 +116,14 @@ Tensor CrossAttention::compute(Tensor x, Tensor context)
     out = out.reshape({b, h, n, d});
     out = out.permute({0, 2, 1, 3});
     out = out.reshape({b, n, h * d});
-    // Output above this line is correct
 
     out = _layer_to_out_0->forward(out);
     out = _layer_to_out_1->forward(out);
     return out;
+}
+std::string hello(const std::string &name)
+{
+    return "Saying hello to " + name + " from C++!";
 }
 } // namespace gten
 

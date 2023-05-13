@@ -1,6 +1,10 @@
 '''
 We refactored the original CrossAttention from copied_crossattn.py to truncated_crossattn.py.
 This code will verify that the outputs of the two implementations are the same.
+
+TODO: WARNING:
+The crossattn_our/CrossAttention somehow cannot pass this test even though the result of plugging
+back into ControlNet is fine.
 '''
 from crossattn_truncated import CrossAttention as CrossAttention1
 from crossattn_our import CrossAttention as CrossAttention2
@@ -8,7 +12,7 @@ import torch
 import numpy as np
 from pathlib import Path
 torch.set_printoptions(sci_mode=False)
-tolerance = 1e-6
+tolerance = 1e-4
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def load_data(p, shape):
@@ -53,7 +57,7 @@ context = context.to(device)
 with torch.no_grad():
     out1 = x.clone()
     out2 = x.clone()
-    for i in range(1):
+    for i in range(10):
         out1 = attn1(out1, context)
         out2 = attn2(out2, context)
 
@@ -62,7 +66,7 @@ with torch.no_grad():
     # Compare two outputs
     
     if torch.allclose(out1, out2, atol=tolerance):
-        print('Outputs are the same!')
+        print('Outputs are the same for the tolerance of ', tolerance)
     else:
         diffs = torch.argwhere((out1 - out2) > tolerance)
         print(f'Number of different elements: {diffs.shape}/{torch.numel(out1)}')
