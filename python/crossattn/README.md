@@ -12,3 +12,8 @@ import gten # Our built target name
 # Use the library 
 print(gten.hello('ECE508 group ten'))
 ```
+3. Example of forward pass of our block
+```python
+cd python/crossattn
+python forward_our.py
+```
