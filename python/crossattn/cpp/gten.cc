@@ -95,6 +95,13 @@ Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
     to(_device);
 
     int h = _heads;
+    printf("x.shape: ");
+    std::cout << x.sizes() << std::endl;
+    printf("layerq shape: ");
+    std::cout << _layer_to_q->weight.sizes() << std::endl;
+    printf("layer out shape:");
+    std::cout << _layer_to_out_0->weight.sizes() << std::endl;
+    std::cout << _layer_to_out_0->bias.sizes() << std::endl;
     Tensor q = basic_linear(x, _layer_to_q->weight, torch::empty({0}));
     return q;
     // Tensor q = _layer_to_q->forward(x);
