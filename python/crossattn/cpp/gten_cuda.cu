@@ -1,4 +1,5 @@
 #include "gten_cuda.cuh"
+#include <memory>
 
 // input.shape: (nr, nk)
 // weight.shape: (nc, nk)
@@ -56,7 +57,58 @@ Tensor basic_linear(Tensor input, Tensor weight, Tensor bias)
     Tensor out = torch::zeros({1, nr, nc}, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
     basic_linear_kernel<<<grid, block>>>(input.data_ptr<float>(), weight.data_ptr<float>(), bias.data_ptr<float>(),
                                          out.data_ptr<float>(), nr, nk, nc, has_bias);
-    cudaDeviceSynchronize();
+
     return out;
 }
+
+Tensor rearrange(Tensor &tensor, int h)
+{
+    int b = tensor.size(0);
+    int n = tensor.size(1);
+    int d = tensor.size(2) / h;
+    tensor = tensor.reshape({b, n, h, d});
+    tensor = tensor.permute({0, 2, 1, 3});
+    tensor = tensor.reshape({b * h, n, d});
+    return tensor;
+}
+
+Tensor CUDA_compute(const Tensor x, const Tensor context,
+                    const Tensor q_weight,
+                    const Tensor k_weight,
+                    const Tensor v_weight,
+                    const Tensor out_weight,
+                    const Tensor out_bias,
+                    const int h, const float scale) {
+
+
+    Tensor q = basic_linear(x, q_weight, torch::empty({0}));
+    Tensor k = basic_linear(context, k_weight, torch::empty({0}));
+    Tensor v = basic_linear(context, v_weight, torch::empty({0}));
+    cudaDeviceSynchronize();
+
+    int b = q.size(0);
+    int n = q.size(1);
+    int d = q.size(2) / h;
+    q = rearrange(q, h);
+    k = rearrange(k, h);
+    v = rearrange(v, h);
+
+    Tensor sim = torch::einsum("b i d, b j d -> b i j", {q, k}) * scale;
+    q.reset();
+    k.reset();
+
+    sim = sim.softmax(-1);
+    Tensor out = torch::einsum("b i j, b j d -> b i d", {sim, v});
+
+    // out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+    out = out.reshape({b, h, n, d});
+    out = out.permute({0, 2, 1, 3});
+    out = out.reshape({b, n, h * d});
+
+    out = basic_linear(out, out_weight, out_bias);
+    cudaDeviceSynchronize();
+
+    return out;
+}
+
 } // namespace gten
