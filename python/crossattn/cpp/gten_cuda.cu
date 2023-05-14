@@ -180,6 +180,7 @@ Tensor CUDA_compute(const Tensor x, const Tensor context, const Tensor q_weight,
     k = rearrange(k, h);
     v = rearrange(v, h);
 
+    // TODO: replace einsum with mysgemm
     Tensor sim = torch::einsum("b i d, b j d -> b i j", {q, k}) * scale;
     q.reset();
     k.reset();
