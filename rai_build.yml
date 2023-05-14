@@ -11,15 +11,12 @@ resources:
 commands:
   build:
     # - /bin/sh -c 'ls -l /usr/local/'
-    - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
+    # - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
     # - /bin/sh -c 'cd /src/python/crossattn/ && python3.8 ensure_our.py'
     # - ls /usr/lib/python3.8/dist-packages
     # - /bin/sh -c 'python3.8 -c "import torch; import gten; gten.hello()"'
-    - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
+    # - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
 
-    # Below is for C++ profiling
-    # - cmake /src
-    # - make
-    # - nsys profile --stats=true -o analysis_file ./gten
-    # - nv-nsight-cu-cli --section '.*' -o analysis_file python3.8 /src/python/forward_old_attention.py
-    # - ./gten -a
+    # Below is for profiling
+    - /bin/sh -c 'cd /src/ControlNet && nsys profile --stats=true -o analysis_file python3.8 my_scribble2image.py'
+    - /bin/sh -c 'cd /src/ControlNet && nv-nsight-cu-cli --section '.*' -o analysis_file python3.8 my_scribble2image.py'
