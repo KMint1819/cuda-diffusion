@@ -6,14 +6,16 @@
 // bias.shape: (nc)
 // out.shape: (nr, nc)
 __global__ void basic_linear_kernel(const float *input, const float *weight, const float *bias, float *out, int nr,
-                                    int nk, int nc, bool has_bias) {
-    
+                                    int nk, int nc, bool has_bias)
+{
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     int x = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    if (x < nc && y < nr) {
+
+    if (x < nc && y < nr)
+    {
         float sum = 0.;
-        for (int k = 0; k < nk; k++) {
+        for (int k = 0; k < nk; k++)
+        {
             sum += input[y * nk + k] * weight[x * nk + k];
         }
         if (has_bias)
@@ -26,10 +28,6 @@ namespace gten
 {
 using Tensor = torch::Tensor;
 
-// TODO: use std::optional
-// input shape: (1, nr, nk)
-// weight shape: (nk, nc)
-// bias shape: nc
 /**
  * @brief
  *
@@ -38,7 +36,8 @@ using Tensor = torch::Tensor;
  * @param bias (nc) Set bias to empty if you don't want to use bias
  * @return Tensor (1, nr, nc)
  */
-Tensor basic_linear(Tensor input, Tensor weight, Tensor bias) {
+Tensor basic_linear(Tensor input, Tensor weight, Tensor bias)
+{
     int nr = input.size(1);
     int nk = input.size(2);
     int nc = weight.size(0);

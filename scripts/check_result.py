@@ -28,12 +28,13 @@ def main(args):
     print(f"Downloaded build {uuid} to {out_path.absolute()}")
 
     showed_images = None
-    for img_path in out_path.glob('*.png'):
+    for i, img_path in enumerate(out_path.glob('*.png')):
         img = cv2.imread(str(img_path))
         if showed_images is None:
             showed_images = img
         else:
             showed_images = np.hstack((showed_images, img))
+    showed_images = showed_images.astype(np.uint8)
     if args.show:
         cv2.imshow(f'build-{uuid}', showed_images)
         cv2.waitKey(0)
@@ -42,6 +43,6 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', type=str, required=True)
-    parser.add_argument('--show', type=bool, default=True)
+    parser.add_argument('--show', action='store_true')
     args = parser.parse_args()
     main(args)
