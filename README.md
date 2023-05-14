@@ -23,7 +23,7 @@ potentially exploit more and more on-chip data reuse for intermediate outputs an
 expensive off-chip DRAM accesses. 
 
 ## How to run
-- This project can only be run using `rai`, a tool from UIUC to run on cloud servers.
+- Currently, this project can only be run using `rai`, a tool from UIUC to run on cloud servers.
 ```
 rai -p .
 ```
@@ -46,27 +46,27 @@ commands:
 
 
 ## TODO:
-1. ~Generate the fake data for running the kernel from the AttentionBlock~
-1. Build unittest for verifying the correctness of the kernel 
+1. ~Generate the fake data for running the kernel from the CrossAttention~
+1. ~Build unittest for verifying the correctness of the kernel~
 1. ~Move the model weights into the docker container and push~
 1. ~Integrate pytorch & cuda-c~
     1. ~Find necessary modules from the ControlNet code to make sure what we need to implement~
     1. ~Find out how to connect the C++ code to pytorch~
-1. ~Implement the operations in an AttentionBlock~
-    1. ~Conv1D~
-    1. ~QKV~
-    1. ~Aggregation~
-1. Implement the cuda operations in an AttentionBlock
-    1. Conv1D
-    1. QKV
-1. ~Plug our attentionblock implementation into the ControlNet model and load weights successfully~
-    1. Provide options to switch between the original and our implementation
+1. ~Implement the operations in an CrossAttention~
+    1. ~Matrix Multiplication~
+    1. ~Softmax~
+1. Implement the cuda operations in an CrossAttention
+    1. ~Matrix Multiplication~
+    1. Softmax
+1. ~Plug our CrossAttention implementation into the ControlNet model and load weights successfully~
+    1. Provide argparse options to switch between the original and our implementation
 1. Profiling 
-    1. Original AttentionBlock 
-    1. Our implementation
+    1. Original CrossAttention (both block and end-to-end)
+    1. Our implementation (both block and end-to-end)
 1. Potential code optimizations
     1. pointer/ref
     1. `torch.zero_grad()`
+1. Decouple the project with rai
 
 ## Team Information
 
@@ -80,10 +80,3 @@ commands:
 ## 4/20 meeting status overview
 #### where we are in the process
 Trying to run [gradio_hough2image.py](https://github.com/lllyasviel/ControlNet/blob/main/gradio_hough2image.py) in [ControlNet](https://github.com/lllyasviel/ControlNet), but we don't have enough gpus to run it.
-#### problems we've solved
-
-#### issues we've encountered
-1. Which part we should implement. Probably some functions in resblock or attentionblock?
-2. Not sure how to get input/output.
-3. What is the expected result for the Presentation?
-#### plans for the coming week

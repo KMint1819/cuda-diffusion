@@ -7,7 +7,6 @@
 __global__ void basic_linear_kernel(const float *input, const float *weight, const float *bias, float *out, int nr,
                                     int nk, int nc, bool has_bias)
 {
-
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     int x = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -28,10 +27,6 @@ namespace gten
 {
 using Tensor = torch::Tensor;
 
-// TODO: use std::optional
-// input shape: (1, nr, nk)
-// weight shape: (nk, nc)
-// bias shape: nc
 /**
  * @brief
  *
@@ -57,7 +52,6 @@ Tensor basic_linear(Tensor input, Tensor weight, Tensor bias)
     dim3 grid(ceil(1.0 * nc / block_width), ceil(1.0 * nr / block_width));
     dim3 block(block_width, block_width);
     bool has_bias = bias.numel() > 0;
-    // printf("has_bias: %d\n\n\n", has_bias);
 
     Tensor out = torch::zeros({1, nr, nc}, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
     basic_linear_kernel<<<grid, block>>>(input.data_ptr<float>(), weight.data_ptr<float>(), bias.data_ptr<float>(),

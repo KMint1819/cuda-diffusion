@@ -23,7 +23,6 @@ class CrossAttention
     std::unique_ptr<torch::nn::LinearImpl> _layer_to_k;
     std::unique_ptr<torch::nn::LinearImpl> _layer_to_v;
     std::unique_ptr<torch::nn::LinearImpl> _layer_to_out_0;
-    std::unique_ptr<torch::nn::DropoutImpl> _layer_to_out_1;
     const int _heads;
     const double _scale;
     torch::Device _device = torch::kCPU;
