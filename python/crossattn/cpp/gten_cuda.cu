@@ -1,4 +1,4 @@
-#include "gten_cuda.h"
+#include "gten_cuda.cuh"
 #include <memory>
 
 // input.shape: (m, k)
@@ -10,8 +10,8 @@
 #define TILE_SZ_B 16
 #define TILE_SZ_RATIO (TILE_SZ_A / TILE_SZ_B)
 
-__global__ void mysgemm_kernel(int m, int k, int n, const float *A, const float *B, float *bias, float *C,
-                               bool has_bias)
+__global__ void mysgemm_linear_kernel(int m, int k, int n, const float *A, const float *B, float *bias, float *C,
+                                      bool has_bias)
 {
     /********************************************************************
      *
@@ -119,7 +119,7 @@ using Tensor = torch::Tensor;
  * @param bias (n) Set bias to empty if you don't want to use bias
  * @return Tensor (1, m, n)
  */
-Tensor mysgemm(Tensor input, Tensor weight, Tensor bias)
+Tensor mysgemm_linear(Tensor input, Tensor weight, Tensor bias)
 {
 
     int m = input.size(1);
@@ -132,8 +132,8 @@ Tensor mysgemm(Tensor input, Tensor weight, Tensor bias)
     dim3 dimGrid(ceil(1.0 * m / TILE_SZ_A), ceil(1.0 * n / TILE_SZ_B));
     dim3 dimBlock(TILE_SZ_A);
 
-    mysgemm_kernel<<<dimGrid, dimBlock>>>(m, k, n, input.data_ptr<float>(), weight.data_ptr<float>(),
-                                          bias.data_ptr<float>(), out.data_ptr<float>(), has_bias);
+    mysgemm_linear_kernel<<<dimGrid, dimBlock>>>(m, k, n, input.data_ptr<float>(), weight.data_ptr<float>(),
+                                                 bias.data_ptr<float>(), out.data_ptr<float>(), has_bias);
     return out;
 }
 
@@ -168,9 +168,9 @@ Tensor CUDA_compute(const Tensor x, const Tensor context, const Tensor q_weight,
                     const Tensor v_weight, const Tensor out_weight, const Tensor out_bias, const int h,
                     const float scale)
 {
-    Tensor q = mysgemm(x, q_weight, torch::empty({0}));
-    Tensor k = mysgemm(context, k_weight, torch::empty({0}));
-    Tensor v = mysgemm(context, v_weight, torch::empty({0}));
+    Tensor q = mysgemm_linear(x, q_weight, torch::empty({0}));
+    Tensor k = mysgemm_linear(context, k_weight, torch::empty({0}));
+    Tensor v = mysgemm_linear(context, v_weight, torch::empty({0}));
     cudaDeviceSynchronize();
 
     int b = q.size(0);
@@ -192,7 +192,7 @@ Tensor CUDA_compute(const Tensor x, const Tensor context, const Tensor q_weight,
     out = out.permute({0, 2, 1, 3});
     out = out.reshape({b, n, h * d});
 
-    out = mysgemm(out, out_weight, out_bias);
+    out = mysgemm_linear(out, out_weight, out_bias);
     cudaDeviceSynchronize();
 
     return out;

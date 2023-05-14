@@ -1,5 +1,5 @@
 #include "gten.hpp"
-#include "gten_cuda.h"
+#include "gten_cuda.cuh"
 #include <iostream>
 #include <memory>
 #include <pybind11/chrono.h>
@@ -87,46 +87,6 @@ Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
     if (_device == torch::kCPU)
         _device = torch::kCUDA;
     to(_device);
-
-    // int h = _heads;
-    // printf("input shape: ");
-    // std::cout << x.sizes() << std::endl;
-    // printf("context .shape: ");
-    // std::cout << context.sizes() << std::endl;
-    // printf("q weight shape: ");
-    // std::cout << _layer_to_q->weight.sizes() << std::endl;
-    // printf("k weight shape: ");
-    // std::cout << _layer_to_k->weight.sizes() << std::endl;
-    // printf("v weight shape: ");
-    // std::cout << _layer_to_v->weight.sizes() << std::endl;
-    // printf("out shape: \n");
-    // std::cout << _layer_to_out->weight.sizes() << std::endl;
-    // std::cout << _layer_to_out->bias.sizes() << std::endl;
-
-    // Tensor q = basic_linear(x, _layer_to_q->weight, torch::empty({0}));
-    // Tensor k = basic_linear(context, _layer_to_k->weight, torch::empty({0}));
-    // Tensor v = basic_linear(context, _layer_to_v->weight, torch::empty({0}));
-
-    // int b = q.size(0);
-    // int n = q.size(1);
-    // int d = q.size(2) / h;
-    // q = rearrange(q, h);
-    // k = rearrange(k, h);
-    // v = rearrange(v, h);
-
-    // Tensor sim = torch::einsum("b i d, b j d -> b i j", {q, k}) * _scale;
-    // q.reset();
-    // k.reset();
-
-    // sim = sim.softmax(-1);
-    // Tensor out = torch::einsum("b i j, b j d -> b i d", {sim, v});
-
-    // // out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-    // out = out.reshape({b, h, n, d});
-    // out = out.permute({0, 2, 1, 3});
-    // out = out.reshape({b, n, h * d});
-
-    // out = basic_linear(out, _layer_to_out->weight, _layer_to_out->bias);
 
     return CUDA_compute(x, context, _layer_to_q->weight, _layer_to_k->weight, _layer_to_v->weight,
                         _layer_to_out->weight, _layer_to_out->bias, _heads, _scale);
