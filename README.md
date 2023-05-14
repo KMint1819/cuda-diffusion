@@ -43,8 +43,6 @@ commands:
     - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
 ```
 
-
-
 ## TODO:
 1. ~Generate the fake data for running the kernel from the CrossAttention~
 1. ~Build unittest for verifying the correctness of the kernel~
@@ -61,8 +59,8 @@ commands:
 1. ~Plug our CrossAttention implementation into the ControlNet model and load weights successfully~
     1. Provide argparse options to switch between the original and our implementation
 1. Profiling 
-    1. Original CrossAttention (both block and end-to-end)
-    1. Our implementation (both block and end-to-end)
+    1. ControlNet with the original CrossAttention
+    1. ControlNet with our CrossAttention
 1. Potential code optimizations
     1. pointer/ref
     1. `torch.zero_grad()`

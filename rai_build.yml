@@ -10,13 +10,12 @@ resources:
   cache: false
 commands:
   build:
-    # - /bin/sh -c 'ls -l /usr/local/'
-    # - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
-    # - /bin/sh -c 'cd /src/python/crossattn/ && python3.8 ensure_our.py'
-    # - ls /usr/lib/python3.8/dist-packages
-    # - /bin/sh -c 'python3.8 -c "import torch; import gten; gten.hello()"'
-    # - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
+    # These are for running the whole ControlNet model
+    - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
+    - /bin/sh -c 'cd /src/ControlNet && python3.8 my_scribble2image.py'
 
-    # Below is for profiling
-    - /bin/sh -c 'cd /src/ControlNet && nsys profile --stats=true -o analysis_file python3.8 my_scribble2image.py'
-    - /bin/sh -c 'cd /src/ControlNet && nv-nsight-cu-cli --section '.*' -o analysis_file python3.8 my_scribble2image.py'
+    # These are for profiling the whole ControlNet model
+    # - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
+    # - /bin/sh -c 'cd /src/ControlNet && nsys profile --stats=true -o analysis_file python3.8 my_scribble2image.py'
+    # - /bin/sh -c 'cd /src/ControlNet && nv-nsight-cu-cli -o /build/analysis_file_nsight python3.8 my_scribble2image.py'
+    # - /bin/sh -c 'cd /src/ControlNet && nv-nsight-cu-cli --section '.*' -o /build/analysis_file_nsight python3.8 my_scribble2image.py'
