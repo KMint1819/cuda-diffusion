@@ -22,6 +22,18 @@ where “hardware-aware” fusion of certain layers of diffusion models can be p
 potentially exploit more and more on-chip data reuse for intermediate outputs and avoid more 
 expensive off-chip DRAM accesses. 
 
+## Comparison
+> Experiments conducted on a single GeForce RTX 3050 Mobile GPU.
+
+- Original CrossAttention
+    - 0.7254059314727783
+    0.719872236251831
+    0.7246274948120117
+- Our CrossAttention
+    - 0.734671000
+    - 0.758603000
+    - 0.752053000   
+
 ## How to run
 - Currently, this project can only be run using `rai`, a tool from UIUC to run on cloud servers.
 ```bash

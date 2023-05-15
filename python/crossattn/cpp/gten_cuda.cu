@@ -1,4 +1,5 @@
 #include "gten_cuda.cuh"
+#include <chrono>
 #include <memory>
 
 // input.shape: (m, k)
@@ -175,6 +176,8 @@ Tensor CUDA_compute(const Tensor x, const Tensor context, const Tensor q_weight,
                     const Tensor v_weight, const Tensor out_weight, const Tensor out_bias, const int h,
                     const float scale)
 {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     Tensor q = mysgemm_linear(x, q_weight, torch::empty({0}));
     Tensor k = mysgemm_linear(context, k_weight, torch::empty({0}));
     Tensor v = mysgemm_linear(context, v_weight, torch::empty({0}));
@@ -203,6 +206,9 @@ Tensor CUDA_compute(const Tensor x, const Tensor context, const Tensor q_weight,
     out = mysgemm_linear(out, out_weight, out_bias);
     cudaDeviceSynchronize();
 
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    printf("CUDA_compute: %.6f ms\n", duration.count() / 1000.0);
     return out;
 }
 

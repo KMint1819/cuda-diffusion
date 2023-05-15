@@ -1,7 +1,7 @@
 '''
 Copied CrossAttention
 '''
-import math
+import time
 import torch
 from torch import nn
 from inspect import isfunction
@@ -48,6 +48,7 @@ class CrossAttention(nn.Module):
         # print('to_out[0].bias.shape: ', self.to_out[0].bias.shape)
 
     def forward(self, x, context=None, mask=None):
+        start = time.time()
         # print('x.shape: ', x.shape)
         h = self.heads
 
@@ -81,4 +82,5 @@ class CrossAttention(nn.Module):
         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
         out = self.to_out(out)
         # print('out.shape: ', out.shape)
+        print('time: ', time.time() - start, 'seconds')
         return out

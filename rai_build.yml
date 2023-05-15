@@ -17,10 +17,10 @@ commands:
 
     # These are for profiling the whole ControlNet model
     - /bin/sh -c 'cd /src/python/ && python3.8 -m pip install ./'
-    - /bin/sh -c 'cd /src/ControlNet && nv-nsight-cu-cli -o /home/gten/analysis_file_nsight python3.8 my_scribble2image.py'
-    - ls /home/gten
-    - /bin/sh -c 'cd /build && tar -czvf report.tar.gz -C /home/gten .'
-    - /bin/sh -c 'cd /home/gten && rm -r *'
-    - ls -l /build
+    - /bin/sh -c 'cd /src/python/crossattn && nv-nsight-cu-cli -o /build/analysis_file_nsight python3.8 forward_crossattn.py our'
+    # - ls /home/gten
+    # - /bin/sh -c 'cd /build && tar -czvf report.tar.gz -C /home/gten .'
+    # - /bin/sh -c 'cd /home/gten && rm -r *'
+    # - ls -l /build
     # - /bin/sh -c 'cd /src/ControlNet && nsys profile --stats=true -o /home/gten/analysis_file python3.8 my_scribble2image.py'
     # - /bin/sh -c 'cd /src/ControlNet && nv-nsight-cu-cli --section '.*' -o /build/analysis_file_nsight python3.8 my_scribble2image.py'
