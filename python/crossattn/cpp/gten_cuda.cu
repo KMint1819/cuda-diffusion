@@ -121,7 +121,6 @@ using Tensor = torch::Tensor;
  */
 Tensor mysgemm_linear(Tensor input, Tensor weight, Tensor bias)
 {
-
     int m = input.size(1);
     int k = input.size(2);
     int n = weight.size(0);
@@ -137,6 +136,14 @@ Tensor mysgemm_linear(Tensor input, Tensor weight, Tensor bias)
     return out;
 }
 
+/**
+ * @brief
+ *
+ * @param input (1, m, k)
+ * @param weight (n, k)
+ * @param bias (n) Set bias to empty if you don't want to use bias
+ * @return Tensor (1, m, n)
+ */
 Tensor basic_linear(Tensor input, Tensor weight, Tensor bias)
 {
     int m = input.size(1);

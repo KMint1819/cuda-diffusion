@@ -24,8 +24,12 @@ expensive off-chip DRAM accesses.
 
 ## How to run
 - Currently, this project can only be run using `rai`, a tool from UIUC to run on cloud servers.
-```
+```bash
 rai -p .
+```
+- If you need to do profiling, you can use the following command:
+```bash
+rai -p . --queue rai_amd64_exclusive
 ```
 - Input image:
     - ![turtle_scribble](github/turtle_scribble.png)

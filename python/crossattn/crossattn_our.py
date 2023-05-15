@@ -74,5 +74,6 @@ class CrossAttention(nn.Module):
             del self.to_k
             del self.to_v
             del self.to_out
-
-        return self.backend.compute(x, context)
+        out = self.backend.compute(x, context)
+        torch.cuda.synchronize()
+        return out
