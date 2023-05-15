@@ -27,12 +27,12 @@ expensive off-chip DRAM accesses.
 
 - Original CrossAttention
     - 0.7254059314727783
-    0.719872236251831
-    0.7246274948120117
-- Our CrossAttention
-    - 0.734671000
-    - 0.758603000
-    - 0.752053000   
+    - 0.719872236251831
+    - 0.7246274948120117
+- Our CrossAttention(t=1024)
+    - 0.711.314000
+    - 0.782.926000
+    - 0.606.936000
 
 ## How to run
 - Currently, this project can only be run using `rai`, a tool from UIUC to run on cloud servers.
