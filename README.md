@@ -22,17 +22,14 @@ where “hardware-aware” fusion of certain layers of diffusion models can be p
 potentially exploit more and more on-chip data reuse for intermediate outputs and avoid more 
 expensive off-chip DRAM accesses. 
 
-## Comparison
+## CrossAttentionBlock Forward Pass Comparison
 > Experiments conducted on a single GeForce RTX 3050 Mobile GPU.
+> TODO: Add nsight profiling results.
 
-- Original CrossAttention
-    - 0.7254059314727783
-    - 0.719872236251831
-    - 0.7246274948120117
-- Our CrossAttention(t=1024)
-    - 0.711.314000
-    - 0.782.926000
-    - 0.606.936000
+| Model | Average Forward Time |
+| ----------- | ---------------------- |
+| Original CrossAttention | 0.723301888 |
+| Our CrossAttention(t=1024) | 0.700392 |
 
 ## How to run
 - Currently, this project can only be run using `rai`, a tool from UIUC to run on cloud servers.
@@ -75,11 +72,11 @@ commands:
 1. ~Plug our CrossAttention implementation into the ControlNet model and load weights successfully~
     1. Provide argparse options to switch between the original and our implementation
 1. Profiling 
-    1. ControlNet with the original CrossAttention
-    1. ControlNet with our CrossAttention
+    1. ~ControlNet with the original CrossAttention~
+    1. ~ControlNet with our CrossAttention~
 1. Potential code optimizations
-    1. pointer/ref
-    1. `torch.zero_grad()`
+    1. ~pointer/ref~
+    1. ~torch.zero_grad()~
 1. Decouple the project with rai
 
 ## Team Information

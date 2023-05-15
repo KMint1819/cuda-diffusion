@@ -7,3 +7,4 @@ dist/
 *.pdf
 *.deb
 out/
+.editorconfig

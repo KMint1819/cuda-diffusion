@@ -82,55 +82,55 @@ Tensor CrossAttention::rearrange(Tensor &tensor, int h) const
     return tensor;
 }
 
-Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
-{
-    if (_device == torch::kCPU)
-        _device = torch::kCUDA;
-    to(_device);
-
-    return CUDA_compute(x, context, _layer_to_q->weight, _layer_to_k->weight, _layer_to_v->weight,
-                        _layer_to_out->weight, _layer_to_out->bias, _heads, _scale);
-}
-
 // Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
 // {
 //     if (_device == torch::kCPU)
 //         _device = torch::kCUDA;
 //     to(_device);
-//     auto start_time = std::chrono::high_resolution_clock::now();
 
-//     Tensor q = _layer_to_q->forward(x);
-//     Tensor k = _layer_to_k->forward(context);
-//     Tensor v = _layer_to_v->forward(context);
-
-//     const int h = _heads;
-//     const int b = q.size(0);
-//     const int n = q.size(1);
-//     const int d = q.size(2) / h;
-//     rearrange(q, h);
-//     rearrange(k, h);
-//     rearrange(v, h);
-
-//     // TODO: replace einsum with mysgemm. also put the scale as a parameter for the kernel
-//     Tensor sim = torch::einsum("b i d, b j d -> b i j", {q, k}) * _scale;
-//     q.reset();
-//     k.reset();
-
-//     sim = sim.softmax(-1);
-//     Tensor out = torch::einsum("b i j, b j d -> b i d", {sim, v});
-
-//     // out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-//     out = out.reshape({b, h, n, d});
-//     out = out.permute({0, 2, 1, 3});
-//     out = out.reshape({b, n, h * d});
-
-//     out = _layer_to_out->forward(out);
-
-//     auto end_time = std::chrono::high_resolution_clock::now();
-//     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-//     printf("Torch C++ compute: %.6f ms\n", duration.count() / 1000.0);
-//     return out;
+//     return CUDA_compute(x, context, _layer_to_q->weight, _layer_to_k->weight, _layer_to_v->weight,
+//                         _layer_to_out->weight, _layer_to_out->bias, _heads, _scale);
 // }
+
+Tensor CrossAttention::compute(const Tensor &x, const Tensor &context)
+{
+    if (_device == torch::kCPU)
+        _device = torch::kCUDA;
+    to(_device);
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    Tensor q = _layer_to_q->forward(x);
+    Tensor k = _layer_to_k->forward(context);
+    Tensor v = _layer_to_v->forward(context);
+
+    const int h = _heads;
+    const int b = q.size(0);
+    const int n = q.size(1);
+    const int d = q.size(2) / h;
+    rearrange(q, h);
+    rearrange(k, h);
+    rearrange(v, h);
+
+    // TODO: replace einsum with mysgemm. also put the scale as a parameter for the kernel
+    Tensor sim = torch::einsum("b i d, b j d -> b i j", {q, k}) * _scale;
+    q.reset();
+    k.reset();
+
+    sim = sim.softmax(-1);
+    Tensor out = torch::einsum("b i j, b j d -> b i d", {sim, v});
+
+    // out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+    out = out.reshape({b, h, n, d});
+    out = out.permute({0, 2, 1, 3});
+    out = out.reshape({b, n, h * d});
+
+    out = _layer_to_out->forward(out);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    printf("Torch C++ compute: %.6f ms\n", duration.count() / 1000.0);
+    return out;
+}
 std::string hello(const std::string &name)
 {
     return "Saying hello to " + name + " from C++!";
