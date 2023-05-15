@@ -39,50 +39,49 @@ __global__ void mysgemm_linear_kernel(const float *A, const float *B, float *bia
 #define B(row, col) B[(row) + (col)*k]
 #define C(row, col) C[(row)*n + (col)]
 
-    __shared__ float sharedN[TILE_SZ_RATIO][TILE_SZ_B];
+  __shared__ float sharedN[TILE_SZ_RATIO][TILE_SZ_B];
 
-    int tx = threadIdx.x;
+  int tx = threadIdx.x;
 
-    int sharedX = tx / TILE_SZ_B;
-    int sharedY = tx % TILE_SZ_B;
+  int sharedX = tx / TILE_SZ_B;
+  int sharedY = tx % TILE_SZ_B;
 
-    int x = blockIdx.x * TILE_SZ_A + tx;
-    int y = blockIdx.y * TILE_SZ_B;
+  int x = blockIdx.x * TILE_SZ_A + tx;
+  int y = blockIdx.y * TILE_SZ_B;
+  int b = blockIdx.z;
 
-    float inputMArr[TILE_SZ_RATIO];
-    float outputArr[TILE_SZ_B] = {0};
+  float inputMArr[TILE_SZ_RATIO];
+  float outputArr[TILE_SZ_B] = { 0 };
 
-    for (int i = 0; i < ceil(1.0 * k / TILE_SZ_RATIO); i++)
-    {
+  for (int i = 0; i < ceil(1.0 * k / TILE_SZ_RATIO); i++) {
 
-        int Tile_Start = i * TILE_SZ_RATIO;
+    int Tile_Start = i * TILE_SZ_RATIO;
 
-        if (Tile_Start + sharedX < k && y + sharedY < n)
-        {
-            sharedN[sharedX][sharedY] = B(Tile_Start + sharedX, y + sharedY);
+    if (Tile_Start + sharedX < k && y + sharedY < n) {
+      sharedN[sharedX][sharedY] = B(b, Tile_Start + sharedX, y + sharedY);
+    }
+    __syncthreads();
+
+    for (int j = 0; j < TILE_SZ_RATIO; j++) {
+      if (x < m && Tile_Start + j < k) {
+        inputMArr[j] = A(b, x, Tile_Start + j);
+      }
+    }
+    __syncthreads();
+
+    for (int j = 0; j < TILE_SZ_RATIO; j++) {
+      for (int out = 0; out < TILE_SZ_B; out++) {
+        if (x < m && Tile_Start + j < k && y + out < n) {
+          outputArr[out] += inputMArr[j] * sharedN[j][out];
         }
-        __syncthreads();
+      }
+    }
+    __syncthreads();
+  }
 
-        for (int j = 0; j < TILE_SZ_RATIO; j++)
-        {
-            if (x < m && Tile_Start + j < k)
-            {
-                inputMArr[j] = A(x, Tile_Start + j);
-            }
-        }
-        __syncthreads();
-
-        for (int j = 0; j < TILE_SZ_RATIO; j++)
-        {
-            for (int out = 0; out < TILE_SZ_B; out++)
-            {
-                if (x < m && Tile_Start + j < k && y + out < n)
-                {
-                    outputArr[out] += inputMArr[j] * sharedN[j][out];
-                }
-            }
-        }
-        __syncthreads();
+  for (int out = 0; out < TILE_SZ_B; out++) {
+    if (has_bias) {
+      outputArr[out] += bias[y + out];
     }
 
     for (int out = 0; out < TILE_SZ_B; out++)
@@ -97,6 +96,7 @@ __global__ void mysgemm_linear_kernel(const float *A, const float *B, float *bia
             C(x, y + out) = outputArr[out];
         }
     }
+  }
 }
 
 __global__ void basic_linear_kernel(const float *input, const float *weight, const float *bias, float *out, int m,
@@ -116,6 +116,10 @@ __global__ void basic_linear_kernel(const float *input, const float *weight, con
             sum += bias[x];
         out[y * n + x] = sum;
     }
+    if (has_bias)
+      sum += bias[x];
+    out[y * n + x] = sum;
+  }
 }
 /**
  * @brief Single precision GEneral Matrix Multiply kernel. Performs C = A @ B
@@ -201,7 +205,7 @@ __global__ void mysgemm_kernel(const float *A, const float *B, float *C, int m, 
 }
 namespace gten
 {
-using Tensor = torch::Tensor;
+  using Tensor = torch::Tensor;
 
 /**
  * @brief
@@ -217,10 +221,16 @@ Tensor mysgemm_linear(const Tensor &input, const Tensor &weight, const Tensor &b
     int k = input.size(2);
     int n = weight.size(0);
 
-    Tensor out = torch::zeros({1, m, n}, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
+    if (mode) {
+      n = weight.size(1);
+    }
+
+    // printf("b: %d, m: %d, k: %d, n: %d\n\n", b, m, k, n);
+
+    Tensor out = torch::zeros({ b, m, n }, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
     bool has_bias = bias.numel() > 0;
 
-    dim3 dimGrid(ceil(1.0 * m / TILE_SZ_A), ceil(1.0 * n / TILE_SZ_B));
+    dim3 dimGrid(ceil(1.0 * m / TILE_SZ_A), ceil(1.0 * n / TILE_SZ_B), b);
     dim3 dimBlock(TILE_SZ_A);
 
     mysgemm_linear_kernel<<<dimGrid, dimBlock>>>(input.data_ptr<float>(), weight.data_ptr<float>(),
@@ -251,16 +261,15 @@ Tensor basic_linear(Tensor input, Tensor weight, Tensor bias)
     return out;
 }
 
-Tensor rearrange(Tensor &tensor, int h)
-{
+  Tensor rearrange(Tensor& tensor, int h) {
     int b = tensor.size(0);
     int n = tensor.size(1);
     int d = tensor.size(2) / h;
-    tensor = tensor.reshape({b, n, h, d});
-    tensor = tensor.permute({0, 2, 1, 3});
-    tensor = tensor.reshape({b * h, n, d});
+    tensor = tensor.reshape({ b, n, h, d });
+    tensor = tensor.permute({ 0, 2, 1, 3 });
+    tensor = tensor.reshape({ b * h, n, d });
     return tensor;
-}
+  }
 
 Tensor CUDA_compute(const Tensor &x, const Tensor &context, const Tensor &q_weight, const Tensor &k_weight,
                     const Tensor &v_weight, const Tensor &out_weight, const Tensor &out_bias, const int h,
@@ -287,20 +296,22 @@ Tensor CUDA_compute(const Tensor &x, const Tensor &context, const Tensor &q_weig
     k.reset();
 
     sim = sim.softmax(-1);
-    Tensor out = torch::einsum("b i j, b j d -> b i d", {sim, v});
+
+    Tensor out = torch::einsum("b i d, b j d -> b i j", { sim, v });
+    // Tensor out = sgemm_linear(sim, v, torch::empty({ 0 }), 1);
 
     // out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-    out = out.reshape({b, h, n, d});
-    out = out.permute({0, 2, 1, 3});
-    out = out.reshape({b, n, h * d});
+    out = out.reshape({ b, h, n, d });
+    out = out.permute({ 0, 2, 1, 3 });
+    out = out.reshape({ b, n, h * d });
 
-    out = mysgemm_linear(out, out_weight, out_bias);
+    out = sgemm_linear(out, out_weight, out_bias, 1, 0);
     cudaDeviceSynchronize();
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
     printf("CUDA_compute: %.6f ms\n", duration.count() / 1000.0);
     return out;
-}
+  }
 
 } // namespace gten
